@@ -16,7 +16,7 @@ NC='\033[0m'
 SERVER_USER="ubuntu"
 SERVER_IP="ec2-3-83-104-93.compute-1.amazonaws.com"
 SSH_KEY="/Users/oskarablimit/Desktop/personal/Projects/aws/aws migration/ec2-key/aws1_keys.pem"
-REPO_URL="https://github.com/YOUR_USERNAME/cloudflare-demo-ecommerce.git"  # You'll need to update this
+REPO_URL="https://github.com/oskarcode/cloudflare-demo-ecommerce-1.git"
 
 echo -e "${BLUE}🚀 Deploying to server...${NC}"
 
