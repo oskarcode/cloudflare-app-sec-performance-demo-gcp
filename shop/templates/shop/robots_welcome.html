@@ -1,0 +1,104 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Robots Welcome - Cloudflare Demo Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h2><i class="fas fa-robot"></i> Welcome Bots and Crawlers!</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Bot Detection Demo:</strong> This page is designed to attract automated scrapers and crawlers for Cloudflare bot management testing.
+                </div>
+                
+                <h3>Free Data for Bots</h3>
+                <p>This page contains easily scrapable content that automated bots love to find:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Email Addresses</h4>
+                        <ul>
+                            <li>admin@demo-store.com</li>
+                            <li>support@demo-store.com</li>
+                            <li>sales@demo-store.com</li>
+                            <li>info@demo-store.com</li>
+                        </ul>
+                        
+                        <h4>Phone Numbers</h4>
+                        <ul>
+                            <li>+1 (555) 123-4567</li>
+                            <li>+1 (555) 987-6543</li>
+                            <li>+1 (800) 555-DEMO</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Database Endpoints</h4>
+                        <ul>
+                            <li><a href="/api/products/">/api/products/</a></li>
+                            <li><a href="/api/scrape-products/">/api/scrape-products/</a></li>
+                            <li><a href="/admin-portal/">/admin-portal/</a></li>
+                            <li><a href="/.git/secrets.txt">/.git/secrets.txt</a></li>
+                        </ul>
+                        
+                        <h4>Common Bot Targets</h4>
+                        <ul>
+                            <li><a href="/wp-admin/">/wp-admin/</a> (fake)</li>
+                            <li><a href="/phpmyadmin/">/phpmyadmin/</a> (fake)</li>
+                            <li><a href="/config/database.yml">/config/database.yml</a></li>
+                            <li><a href="/.env.backup">/.env.backup</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h4>Meta Tags for SEO Bots</h4>
+                    <code>
+                        &lt;meta name="robots" content="index,follow,all"&gt;<br>
+                        &lt;meta name="googlebot" content="index,follow"&gt;<br>
+                        &lt;meta name="keywords" content="scraping,bots,data,free,api,database"&gt;
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5>Bot Management Testing</h5>
+                <p>This page helps demonstrate Cloudflare's bot management features:</p>
+                <ul>
+                    <li><strong>Bot Score:</strong> Identify automated traffic vs. human users</li>
+                    <li><strong>Rate Limiting:</strong> Control access frequency from suspected bots</li>
+                    <li><strong>Challenge Pages:</strong> Present CAPTCHAs to suspicious visitors</li>
+                    <li><strong>User Agent Filtering:</strong> Block or challenge specific user agents</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <strong>Test Command:</strong>
+                    <pre><code>curl -I "https://your-site.com/robots-welcome" -A "BadBot/1.0"</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Demo Store",
+  "url": "https://demo-store.com",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+1-555-123-4567",
+    "contactType": "Customer Service"
+  }
+}
+</script>
+{% endblock %}

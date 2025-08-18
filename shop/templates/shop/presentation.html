@@ -1,0 +1,613 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}Cloudflare Security Demo - Presentation{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        padding: 80px 0;
+        margin: -30px -15px 30px -15px;
+    }
+    .section-padding {
+        padding: 60px 0;
+    }
+    .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .pain-point {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+    }
+    .solution {
+        background: #dcfce7;
+        border-left: 4px solid #22c55e;
+    }
+    .metric {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #f97316;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #f97316;
+    }
+    .btn-primary {
+        background-color: #f97316;
+        border-color: #f97316;
+    }
+    .btn-primary:hover {
+        background-color: #ea580c;
+        border-color: #ea580c;
+    }
+    .cloudflare-logo {
+        color: #f97316;
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-shield-alt"></i> Cloudflare Security Demo
+                </h1>
+                <p class="lead mb-4">
+                    Security demonstration for e-commerce applications showing common vulnerabilities and Cloudflare protection capabilities.
+                </p>
+            </div>
+            <div class="col-lg-4">
+                <div class="text-center">
+                    <i class="fas fa-globe-americas" style="font-size: 200px; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Navigation Menu -->
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-pills nav-justified mb-4" id="demo-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#case-content" data-bs-toggle="pill">
+                        <i class="fas fa-briefcase"></i> Case Background
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#architecture-content" data-bs-toggle="pill">
+                        <i class="fas fa-sitemap"></i> Architecture
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#why-cloudflare-content" data-bs-toggle="pill">
+                        <i class="fas fa-globe"></i> Why Cloudflare
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#value-content" data-bs-toggle="pill">
+                        <i class="fas fa-chart-line"></i> Value Proposition
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="demo-tab-content">
+        
+        <!-- Case Background -->
+        <div class="tab-pane fade show active" id="case-content">
+            <div class="row section-padding">
+                <div class="col-lg-6">
+                    <h2><i class="fas fa-building"></i> Business Context</h2>
+                    <div class="card card-hover mb-4">
+                        <div class="card-body">
+                            <h5><i class="fas fa-store"></i> E-commerce Application</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-users text-primary"></i> <strong>Global User Base</strong> - Users all over the world</li>
+                                <li><i class="fas fa-chart-line text-primary"></i> <strong>Monthly Active Users</strong> - Around 100K</li>
+                                <li><i class="fas fa-shopping-cart text-primary"></i> <strong>Product Catalog</strong> and search functionality</li>
+                                <li><i class="fas fa-api text-primary"></i> <strong>API Endpoints</strong> for data access</li>
+                                <li><i class="fas fa-mobile-alt text-primary"></i> <strong>Web Application</strong> with forms</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3><i class="fas fa-wrench"></i> Current Solution</h3>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Point Security Solution</strong><br>
+                        Mainly using point security solution for the security, mostly single layer security
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <h3><i class="fas fa-exclamation-circle text-danger"></i> Critical Pain Points</h3>
+                    
+                    <div class="card pain-point mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-key"></i> Credential Leaking</h6>
+                            <p class="mb-1">Sensitive files and API keys exposed to attackers</p>
+                            <small><a href="/.env.backup">Test: /.env.backup</a></small>
+                        </div>
+                    </div>
+
+                    <div class="card pain-point mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-bug"></i> SQL Injection Attacks</h6>
+                            <p class="mb-1">Database vulnerabilities at search and contact endpoints</p>
+                            <small><a href="/search/?q=test' OR '1'='1' --">Test: SQL Injection</a></small>
+                        </div>
+                    </div>
+
+                    <div class="card pain-point mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-robot"></i> Bot Scraping</h6>
+                            <p class="mb-1">Automated content scraping and competitive intelligence</p>
+                            <small><a href="/robots-welcome/">Test: Bot Welcome</a></small>
+                        </div>
+                    </div>
+
+                    <div class="card pain-point mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-fist-raised"></i> Brute Force Attacks</h6>
+                            <p class="mb-1">Login credential attacks overwhelming systems</p>
+                            <small><a href="/login/">Test: Login Form</a></small>
+                        </div>
+                    </div>
+
+                    <div class="card pain-point mb-3">
+                        <div class="card-body">
+                            <h6><i class="fas fa-bomb"></i> DDoS Attacks</h6>
+                            <p class="mb-1">Volumetric attacks causing service disruptions</p>
+                            <small><a href="/api/products/">Test: API Abuse</a></small>
+                        </div>
+                    </div>
+
+                    <div class="card pain-point">
+                        <div class="card-body">
+                            <h6><i class="fas fa-dollar-sign"></i> Operational Challenges</h6>
+                            <p class="mb-0">Costly, hard to manage, and non-scalable point solutions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <h3><i class="fas fa-list-alt text-primary"></i> Demo Agenda</h3>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h6><i class="fas fa-shield-alt"></i> WAF Protection</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>Managed Rules:</strong> SQL injection protection (search functionality)</li>
+                                <li><strong>Custom Rules:</strong> Challenge suspicious behavior (contact form)</li>
+                                <li><strong>Target:</strong> Git secrets exposure protection</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning text-dark">
+                            <h6><i class="fas fa-tachometer-alt"></i> Rate Limiting</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>Login Protection:</strong> Prevent brute force attacks</li>
+                                <li><strong>API Protection:</strong> Limit product API abuse</li>
+                                <li><strong>Target:</strong> Fair usage enforcement</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h6><i class="fas fa-robot"></i> Bot Management</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>Detection:</strong> Identify malicious bots</li>
+                                <li><strong>Challenge:</strong> Block automated scraping</li>
+                                <li><strong>Target:</strong> Content and pricing protection</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h6><i class="fas fa-code"></i> Workers Script</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>Flash Sale Protection:</strong> Rate limit high-demand pages</li>
+                                <li><strong>Custom Logic:</strong> 1 request per 10 seconds per IP</li>
+                                <li><strong>Target:</strong> Ensure fair access during sales events</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Content -->
+        <div class="tab-pane fade" id="architecture-content">
+            <div class="section-padding">
+                <h2 class="text-center mb-5"><i class="fas fa-sitemap"></i> Architecture</h2>
+                
+                <!-- Demo Site Architecture -->
+                <div class="row mb-5">
+                    <div class="col-lg-12">
+                        <h3><i class="fas fa-layer-group"></i> Demo Site Technical Architecture</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <pre class="bg-light p-4 rounded">
+<strong>┌─────────────────────────────────────────────────────────────────────────────┐</strong>
+<strong>│                           CLOUDFLARE EDGE NETWORK                          │</strong>
+<strong>│  ┌─────────────────────────────────────────────────────────────────────┐   │</strong>
+<strong>│  │                      🛡️ SECURITY LAYER                              │   │</strong>
+<strong>│  │  • WAF (Web Application Firewall)     • Rate Limiting               │   │</strong>
+<strong>│  │  • Bot Management                      • Access Rules                │   │</strong>
+<strong>│  │  • DDoS Protection                     • SSL/TLS Termination         │   │</strong>
+<strong>│  │  • Workers (Custom Logic)             • Page Rules                   │   │</strong>
+<strong>│  └─────────────────────────────────────────────────────────────────────┘   │</strong>
+<strong>│                                     │                                       │</strong>
+<strong>└─────────────────────────────────────┼───────────────────────────────────────┘</strong>
+                                      │
+                                      ▼
+<strong>┌─────────────────────────────────────────────────────────────────────────────┐</strong>
+<strong>│                              WEB SERVER                                    │</strong>
+<strong>│  ┌─────────────────────────────────────────────────────────────────────┐   │</strong>
+<strong>│  │                        🌐 NGINX                                     │   │</strong>
+<strong>│  │  • Reverse Proxy                 • SSL Certificate                  │   │</strong>
+<strong>│  │  • Static File Serving           • Security Headers                 │   │</strong>
+<strong>│  └─────────────────────────┬───────────────────────────────────────────┘   │</strong>
+<strong>│                            │                                               │</strong>
+<strong>│                            ▼                                               │</strong>
+<strong>│  ┌─────────────────────────────────────────────────────────────────────┐   │</strong>
+<strong>│  │                    🐍 DJANGO APPLICATION                           │   │</strong>
+<strong>│  │  <span style="color: #dc3545;">🚨 DEMO VULNERABILITIES:</span>                                          │   │</strong>
+<strong>│  │  • SQL Injection (Raw Queries)     • CSRF Protection Disabled      │   │</strong>
+<strong>│  │  • Missing Rate Limiting           • Debug Mode Enabled            │   │</strong>
+<strong>│  │  • No Bot Protection               • Exposed Credential Files      │   │</strong>
+<strong>│  └─────────────────────────┬───────────────────────────────────────────┘   │</strong>
+<strong>│                            │                                               │</strong>
+<strong>│                            ▼                                               │</strong>
+<strong>│  ┌─────────────────────────────────────────────────────────────────────┐   │</strong>
+<strong>│  │                       🗃️ DATABASE                                  │   │</strong>
+<strong>│  │  • Product Catalog            • User Accounts                      │   │</strong>
+<strong>│  │  • Categories & Pricing       • Session Management                 │   │</strong>
+<strong>│  └─────────────────────────────────────────────────────────────────────┘   │</strong>
+<strong>└─────────────────────────────────────────────────────────────────────────────┘</strong>
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Layers -->
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h5><i class="fas fa-bug"></i> Vulnerabilities</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-search"></i> SQL Injection</li>
+                                    <li><i class="fas fa-key"></i> Credential Exposure</li>
+                                    <li><i class="fas fa-tachometer-alt"></i> No Rate Limiting</li>
+                                    <li><i class="fas fa-robot"></i> Bot Access</li>
+                                    <li><i class="fas fa-shield-alt"></i> Missing Security Headers</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h5><i class="fas fa-arrow-right"></i> Before Cloudflare</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Direct exposure to all threats:</p>
+                                <ul class="list-unstyled text-danger">
+                                    <li>✗ SQL injections succeed</li>
+                                    <li>✗ Credentials accessible</li>
+                                    <li>✗ Unlimited API requests</li>
+                                    <li>✗ Bots scrape content</li>
+                                    <li>✗ Brute force attacks</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5><i class="fas fa-shield-alt"></i> After Cloudflare</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Comprehensive edge protection:</p>
+                                <ul class="list-unstyled text-success">
+                                    <li>✓ WAF blocks injections</li>
+                                    <li>✓ Access rules protect files</li>
+                                    <li>✓ Rate limiting active</li>
+                                    <li>✓ Bot management enabled</li>
+                                    <li>✓ Workers custom logic</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Why Cloudflare Content -->
+        <div class="tab-pane fade" id="why-cloudflare-content">
+            <div class="section-padding">
+                <h2 class="text-center mb-5"><i class="fas fa-globe"></i> Why Cloudflare</h2>
+                
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3><i class="fas fa-network-wired"></i> The Cloudflare Global Network</h3>
+                                <p class="lead">Our vast global network, which is one of the fastest on the planet, is trusted by millions of web properties.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Network Reach -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5><i class="fas fa-clock"></i> Ultra-Low Latency</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric text-primary">~50ms</div>
+                                <p><strong>From about 95% of the world's Internet-connected population</strong></p>
+                                <p><strong>For E-commerce:</strong> This means faster page loads, quicker checkout processes, and reduced cart abandonment rates. Users can browse products, add items to cart, and complete purchases with minimal delay, leading to better conversion rates and customer satisfaction.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Global Presence -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5><i class="fas fa-map-marker-alt"></i> Global Presence</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric text-success">330</div>
+                                <p><strong>Cities in 125+ countries, including mainland China</strong></p>
+                                <p><strong>For E-commerce:</strong> Your online store can serve customers worldwide with consistent performance. Whether a customer is shopping from New York, London, Tokyo, or Shanghai, they'll experience the same fast, reliable service that builds trust and encourages repeat purchases.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Network Connections -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-info text-white">
+                                <h5><i class="fas fa-plug"></i> Direct Connections</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric text-info">13,000</div>
+                                <p><strong>Networks directly connect to Cloudflare, including every major ISP, cloud provider, and enterprise</strong></p>
+                                <p><strong>For E-commerce:</strong> Direct connections ensure your products and services reach customers through the most optimal paths, reducing packet loss and improving reliability. This means fewer failed transactions and a more stable shopping experience during peak traffic periods.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Network Capacity -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h5><i class="fas fa-tachometer-alt"></i> Massive Capacity</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric text-warning">405 Tbps</div>
+                                <p><strong>Global network edge capacity, consisting of transit connections, peering and private network interconnects</strong></p>
+                                <p><strong>For E-commerce:</strong> This enormous capacity handles traffic spikes during flash sales, holiday shopping, or viral marketing campaigns without service degradation. Your store remains accessible and responsive even when experiencing sudden surges in visitor traffic.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Anycast Network Design -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-dark text-white">
+                                <h5><i class="fas fa-network-wired"></i> Anycast Network Design</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric text-dark"><i class="fas fa-globe"></i></div>
+                                <p><strong>Each service lives on each server in each data center across the global network</strong></p>
+                                <p><strong>For E-commerce:</strong> Instead of routing traffic to a single origin server, anycast automatically directs customers to the nearest available service instance. This means your checkout process, product catalog, and customer support are available locally in every major city, providing consistent performance regardless of where your customers shop from around the world.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-lightbulb"></i> What This Means for Your E-commerce Business</h5>
+                            <p class="mb-0">Cloudflare's global network ensures your customers enjoy fast, reliable shopping experiences regardless of their location. This translates directly to higher conversion rates, increased customer satisfaction, and improved revenue performance across all markets.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Value Proposition -->
+        <div class="tab-pane fade" id="value-content">
+            <div class="section-padding">
+                <h2 class="text-center mb-5"><i class="fas fa-chart-line"></i> Cloudflare Value Proposition for E-commerce</h2>
+                
+                <!-- Value Proposition Grid -->
+                <div class="row mb-5">
+                    <div class="col-lg-4 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5><i class="fas fa-rocket"></i> Superior Online Experience</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Get performance, convenience, and availability from their online platforms, even during peak activity.</p>
+                                <ul class="list-unstyled">
+                                    <li><strong>Learn more:</strong></li>
+                                    <li><a href="#">Cloudflare Web Optimization</a></li>
+                                    <li><a href="#">Cloudflare Argo Routing</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5><i class="fas fa-shield-alt"></i> Mitigate DDoS Attacks</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Leverage a fast, easy-to-deploy, and scalable layered defense against DDoS attacks.</p>
+                                <ul class="list-unstyled">
+                                    <li><strong>Learn more:</strong></li>
+                                    <li><a href="#">Cloudflare DDoS Protection</a></li>
+                                    <li><a href="#">Cloudflare Magic Transit</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-info text-white">
+                                <h5><i class="fas fa-cog"></i> Improve Agility & Lower Cost</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Get tools to help web developers work faster while reducing operational overhead and costs.</p>
+                                <ul class="list-unstyled">
+                                    <li><strong>Learn more:</strong></li>
+                                    <li><a href="#">Cloudflare One</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h5><i class="fas fa-clock"></i> Ensure Uptime & Reliability</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Mitigate traffic surges and outages during events like seasonal promotional events.</p>
+                                <ul class="list-unstyled">
+                                    <li><strong>Learn more:</strong></li>
+                                    <li><a href="#">Cloudflare Load Balancing</a></li>
+                                    <li><a href="#">Cloudflare Rate Limiting</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-secondary text-white">
+                                <h5><i class="fas fa-brain"></i> Deploy Intelligence at Edge</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Enforce geo-based access policies or reduce latency by deploying serverless code on Cloudflare's network.</p>
+                                <ul class="list-unstyled">
+                                    <li><strong>Learn more:</strong></li>
+                                    <li><a href="#">Cloudflare Workers</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h5><i class="fas fa-user-shield"></i> Prevent Fraudulent Activity</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Stop fraud before it leads to significant losses in revenue and profitability.</p>
+                                <ul class="list-unstyled">
+                                    <li><strong>Learn more:</strong></li>
+                                    <li><a href="#">Cloudflare WAF</a></li>
+                                    <li><a href="#">Cloudflare Bot Management</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Benefits -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-center mb-4"><i class="fas fa-calculator"></i> Key Benefits</h3>
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="metric text-success"><i class="fas fa-tachometer-alt"></i></div>
+                                        <div>Improved Performance</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric text-primary"><i class="fas fa-shield-alt"></i></div>
+                                        <div>Enhanced Security</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric text-warning"><i class="fas fa-layer-group"></i></div>
+                                        <div>Simplified/Multilayered/Consolidated Security Platform</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric text-danger"><i class="fas fa-dollar-sign"></i></div>
+                                        <div>Cost Reduction</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Use Case Link -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="text-center">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h5><i class="fas fa-users"></i> Customer Use Case</h5>
+                                    <p class="mb-3">Explore real customer success stories and use cases</p>
+                                    <a href="https://www.cloudflare.com/en-gb/ecommerce/" target="_blank" class="btn btn-info btn-lg">
+                                        <i class="fas fa-external-link-alt"></i> View E-commerce Solutions
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-advance demo sections (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Cloudflare Security Demo Presentation Ready');
+});
+</script>
+
+{% endblock %}

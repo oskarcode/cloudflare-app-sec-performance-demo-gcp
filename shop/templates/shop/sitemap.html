@@ -1,0 +1,115 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Sitemap Generator - Cloudflare Demo Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-sitemap"></i> Sitemap Generator</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Bot Target:</strong> This endpoint is commonly targeted by SEO bots and crawlers looking for sitemap files.
+                </div>
+                
+                <h3>Available Sitemaps</h3>
+                <ul class="list-group mb-4">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-code"></i> sitemap.xml</span>
+                        <button class="btn btn-outline-primary btn-sm" disabled>Download</button>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-code"></i> sitemap_products.xml</span>
+                        <button class="btn btn-outline-primary btn-sm" disabled>Download</button>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-code"></i> sitemap_pages.xml</span>
+                        <button class="btn btn-outline-primary btn-sm" disabled>Download</button>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-file-code"></i> robots.txt</span>
+                        <button class="btn btn-outline-success btn-sm" disabled>View</button>
+                    </li>
+                </ul>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Sitemap Statistics</h4>
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr><td>Total Pages</td><td>42</td></tr>
+                                <tr><td>Products</td><td>15</td></tr>
+                                <tr><td>Categories</td><td>5</td></tr>
+                                <tr><td>Last Updated</td><td>{{ "now"|date:"Y-m-d H:i:s" }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>SEO Information</h4>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p><strong>Meta Description:</strong> Demo e-commerce store for Cloudflare security testing</p>
+                                <p><strong>Keywords:</strong> demo, ecommerce, cloudflare, security, testing</p>
+                                <p><strong>Canonical URL:</strong> https://demo-store.com/</p>
+                                <p><strong>Robots Policy:</strong> index, follow</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5>Sitemap Endpoint Security</h5>
+                <p>This sitemap generator page is often targeted by:</p>
+                <ul>
+                    <li><strong>SEO Bots:</strong> Looking for sitemap.xml files</li>
+                    <li><strong>Content Scrapers:</strong> Finding all available pages to scrape</li>
+                    <li><strong>Vulnerability Scanners:</strong> Mapping site structure</li>
+                    <li><strong>Competitive Intelligence:</strong> Understanding site architecture</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <strong>Typical Bot Requests:</strong><br>
+                    <code>GET /sitemap.xml</code><br>
+                    <code>GET /sitemap_index.xml</code><br>
+                    <code>GET /robots.txt</code><br>
+                    <code>GET /sitemap-generator</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h4>Sample Sitemap Content</h4>
+    <pre class="bg-dark text-light p-3 rounded"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"&gt;
+    &lt;url&gt;
+        &lt;loc&gt;https://demo-store.com/&lt;/loc&gt;
+        &lt;lastmod&gt;{{ "now"|date:"Y-m-d" }}&lt;/lastmod&gt;
+        &lt;changefreq&gt;daily&lt;/changefreq&gt;
+        &lt;priority&gt;1.0&lt;/priority&gt;
+    &lt;/url&gt;
+    &lt;url&gt;
+        &lt;loc&gt;https://demo-store.com/search/&lt;/loc&gt;
+        &lt;lastmod&gt;{{ "now"|date:"Y-m-d" }}&lt;/lastmod&gt;
+        &lt;changefreq&gt;weekly&lt;/changefreq&gt;
+        &lt;priority&gt;0.8&lt;/priority&gt;
+    &lt;/url&gt;
+    &lt;url&gt;
+        &lt;loc&gt;https://demo-store.com/contact/&lt;/loc&gt;
+        &lt;lastmod&gt;{{ "now"|date:"Y-m-d" }}&lt;/lastmod&gt;
+        &lt;changefreq&gt;monthly&lt;/changefreq&gt;
+        &lt;priority&gt;0.6&lt;/priority&gt;
+    &lt;/url&gt;
+&lt;/urlset&gt;</code></pre>
+</div>
+{% endblock %}

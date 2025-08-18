@@ -1,0 +1,29 @@
+# Cloudflare Workers Configuration
+# Flash Sale Rate Limiter
+
+name = "flash-sale-rate-limiter"
+main = "flash-sale-rate-limiter.js"
+compatibility_date = "2024-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Account and Zone Configuration - REPLACE WITH YOUR VALUES
+# account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+
+# Worker Settings
+workers_dev = false  # Deploy to custom domain, not workers.dev
+# route = { pattern = "demo.oskarcode.com/flash-sale*", zone_id = "YOUR_ZONE_ID" }
+
+# Environment Variables
+[env.production]
+name = "flash-sale-rate-limiter"
+
+# Limits and Configuration
+[limits]
+cpu_ms = 50     # 50ms CPU limit per request
+memory_mb = 128 # 128MB memory limit
+
+# Variables for runtime
+[vars]
+ENVIRONMENT = "production"
+RATE_LIMIT_SECONDS = "10"
+MAX_REQUESTS_PER_PERIOD = "1"

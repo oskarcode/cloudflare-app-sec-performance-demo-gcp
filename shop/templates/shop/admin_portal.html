@@ -1,0 +1,117 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Admin Portal - Cloudflare Demo Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h2><i class="fas fa-shield-alt"></i> Fake Admin Portal</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Security Demo:</strong> This is a fake admin portal designed to attract malicious bots and test Cloudflare security rules.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>System Status</h4>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-circle text-success"></i> Database: Online</li>
+                                    <li><i class="fas fa-circle text-success"></i> Web Server: Running</li>
+                                    <li><i class="fas fa-circle text-warning"></i> Backup: In Progress</li>
+                                    <li><i class="fas fa-circle text-danger"></i> Security: Vulnerable (Demo)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h4>Quick Actions</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" disabled>
+                                        <i class="fas fa-users"></i> Manage Users
+                                    </button>
+                                    <button class="btn btn-outline-warning" disabled>
+                                        <i class="fas fa-database"></i> Database Admin
+                                    </button>
+                                    <button class="btn btn-outline-danger" disabled>
+                                        <i class="fas fa-cog"></i> System Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Fake Login Form</h4>
+                            </div>
+                            <div class="card-body">
+                                <form>
+                                    <div class="mb-3">
+                                        <label class="form-label">Administrator Username</label>
+                                        <input type="text" class="form-control" placeholder="admin" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" class="form-control" placeholder="password" disabled>
+                                    </div>
+                                    <button type="button" class="btn btn-danger" disabled>
+                                        <i class="fas fa-sign-in-alt"></i> Login (Fake)
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h4>System Information</h4>
+                            </div>
+                            <div class="card-body">
+                                <small>
+                                    <strong>Server:</strong> Ubuntu 20.04.3 LTS<br>
+                                    <strong>PHP Version:</strong> 8.1.2 (fake)<br>
+                                    <strong>MySQL:</strong> 8.0.28 (fake)<br>
+                                    <strong>Apache:</strong> 2.4.52 (fake)<br>
+                                    <strong>Admin Panel:</strong> phpMyAdmin 5.1.3 (fake)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5>Admin Portal Security Testing</h5>
+                <p>This fake admin portal demonstrates several Cloudflare security features:</p>
+                <ul>
+                    <li><strong>Access Rules:</strong> Block access to admin areas by country or IP</li>
+                    <li><strong>Rate Limiting:</strong> Prevent brute force attacks on admin portals</li>
+                    <li><strong>WAF Custom Rules:</strong> Challenge or block access to /admin-portal</li>
+                    <li><strong>Bot Management:</strong> Detect automated admin panel attacks</li>
+                </ul>
+                <div class="alert alert-info">
+                    <strong>Common Admin Paths Targeted by Bots:</strong>
+                    <br><code>/admin, /administrator, /wp-admin, /phpmyadmin, /cpanel, /admin-portal</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

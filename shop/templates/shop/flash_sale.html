@@ -1,0 +1,213 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}🔥 Flash Sale - Limited Time!{% endblock %}
+
+{% block content %}
+<style>
+    .flash-sale-header {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 40px 0;
+        text-align: center;
+        margin: -30px -15px 30px -15px;
+        position: relative;
+        overflow: hidden;
+    }
+    .flash-sale-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(255,255,255,0.1) 10px,
+            rgba(255,255,255,0.1) 20px
+        );
+        animation: move 20s linear infinite;
+    }
+    @keyframes move {
+        0% { transform: translateX(-50px) translateY(-50px); }
+        100% { transform: translateX(50px) translateY(50px); }
+    }
+    .flash-timer {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #ffd700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        margin: 20px 0;
+    }
+    .sale-badge {
+        background: #ff4757;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        transform: rotate(15deg);
+        font-size: 14px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .product-flash {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .product-flash:hover {
+        transform: translateY(-5px);
+        border-color: #ff6b6b;
+        box-shadow: 0 8px 25px rgba(255,107,107,0.3);
+    }
+    .original-price {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 0.9rem;
+    }
+    .sale-price {
+        color: #ff4757;
+        font-weight: bold;
+        font-size: 1.3rem;
+    }
+    .stock-warning {
+        background: #ffeaa7;
+        color: #d63031;
+        padding: 8px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .protected-notice {
+        background: #74b9ff;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+</style>
+
+<!-- Flash Sale Header -->
+<div class="flash-sale-header">
+    <div class="container">
+        <h1 class="display-3">🔥 FLASH SALE 🔥</h1>
+        <p class="lead">Limited time offers - Up to 70% OFF!</p>
+        <div class="flash-timer" id="timer">
+            ⏰ 23:45:12 remaining
+        </div>
+        <p><strong>⚡ High demand - Protected by Cloudflare Workers!</strong></p>
+    </div>
+</div>
+
+<!-- Workers Protection Notice -->
+<div class="protected-notice">
+    <i class="fas fa-shield-alt"></i>
+    <strong>Bot Protection Active:</strong> This page is protected by Cloudflare Workers to ensure fair access during high traffic.
+    Rate limited to 1 request per 10 seconds per IP address.
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>⚡ Lightning Deals</h2>
+        <p class="text-muted">Limited quantities - First come, first served!</p>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    {% for product in products %}
+        <div class="col-md-4 col-lg-4 mb-4">
+            <div class="card product-flash h-100">
+                <div class="sale-badge">-50%</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">{{ product.description|truncatewords:10 }}</p>
+                    <p class="text-muted">
+                        <small><i class="fas fa-tag"></i> {{ product.category }}</small>
+                    </p>
+                    <div class="stock-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Only 3 left in stock!
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="original-price">${{ product.price }}</span>
+                            <span class="sale-price">${{ product.price|floatformat:0|add:"-50" }}</span>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="addToCart({{ product.pk }})">
+                            <i class="fas fa-shopping-cart"></i> Buy Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> No flash sale items available right now.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Demo Instructions -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5><i class="fas fa-info-circle"></i> Demo Instructions</h5>
+                <p><strong>To test the Workers rate limiter:</strong></p>
+                <ol>
+                    <li>Refresh this page quickly (within 10 seconds)</li>
+                    <li>You'll see the "High Demand - Please Wait" protection page</li>
+                    <li>Wait 10 seconds, then try again - access will be restored</li>
+                </ol>
+                <p class="text-muted">
+                    <small><i class="fas fa-shield-alt"></i> This demonstrates how Cloudflare Workers can protect high-value pages from bot attacks during flash sales.</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fake countdown timer for demo effect
+function updateTimer() {
+    const timer = document.getElementById('timer');
+    let hours = 23;
+    let minutes = Math.floor(Math.random() * 60);
+    let seconds = Math.floor(Math.random() * 60);
+    
+    setInterval(function() {
+        seconds--;
+        if (seconds < 0) {
+            seconds = 59;
+            minutes--;
+            if (minutes < 0) {
+                minutes = 59;
+                hours--;
+            }
+        }
+        timer.textContent = `⏰ ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')} remaining`;
+    }, 1000);
+}
+
+function addToCart(productId) {
+    alert('🛒 Added to cart! (Demo function)\n\n' +
+          'In a real flash sale, this would:\n' +
+          '• Check inventory\n' + 
+          '• Reserve item for 10 minutes\n' +
+          '• Update stock counter\n' +
+          '• Process payment quickly');
+}
+
+// Start the timer
+updateTimer();
+</script>
+
+{% endblock %}

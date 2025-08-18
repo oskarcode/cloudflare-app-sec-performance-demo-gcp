@@ -1,0 +1,72 @@
+# DEMO DATABASE CONFIG - FAKE CREDENTIALS FOR CLOUDFLARE DEMO
+# This file simulates exposed database configuration
+
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: demo_store_development
+  pool: 5
+  username: demo_user
+  password: demo_password_123_not_real
+  host: localhost
+  port: 5432
+
+test:
+  adapter: postgresql
+  encoding: unicode
+  database: demo_store_test
+  pool: 5
+  username: test_user
+  password: test_password_456_fake
+  host: localhost
+  port: 5432
+
+production:
+  adapter: postgresql
+  encoding: unicode
+  database: demo_store_production
+  pool: 25
+  username: prod_admin
+  password: super_secure_prod_password_789_not_real
+  host: db.demo-store.com
+  port: 5432
+
+# Redis configuration
+redis:
+  development:
+    host: localhost
+    port: 6379
+    db: 0
+    password: redis_password_not_real
+  
+  production:
+    host: redis.demo-store.com
+    port: 6379
+    db: 0
+    password: prod_redis_password_fake_123
+
+# MongoDB configuration  
+mongodb:
+  development:
+    host: localhost
+    port: 27017
+    database: demo_store_dev
+    username: mongo_user
+    password: mongo_password_not_real
+    
+  production:
+    host: mongo.demo-store.com
+    port: 27017
+    database: demo_store_prod
+    username: mongo_admin
+    password: mongo_prod_password_fake_456
+
+# Elasticsearch
+elasticsearch:
+  host: search.demo-store.com
+  port: 9200
+  username: elastic_user
+  password: elastic_password_fake_789
+
+# FAKE CREDENTIALS FOR DEMONSTRATION ONLY
+# Never expose real database credentials like this!

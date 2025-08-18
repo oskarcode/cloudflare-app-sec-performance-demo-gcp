@@ -1,0 +1,90 @@
+DEMO LICENSE - EDUCATIONAL USE ONLY
+
+Copyright (c) 2025 Cloudflare Security Demo Project
+
+IMPORTANT NOTICE:
+This software is provided for DEMONSTRATION and EDUCATIONAL purposes only.
+This software contains intentional security vulnerabilities and is NOT suitable 
+for production use.
+
+TERMS OF USE:
+
+PERMITTED USES:
+✅ Educational demonstrations of Cloudflare security features
+✅ Security training and awareness programs  
+✅ Controlled testing environments and laboratories
+✅ Academic research and coursework
+✅ Security conference presentations and workshops
+✅ Internal corporate training sessions
+
+PROHIBITED USES:
+❌ Production deployment of any kind
+❌ Processing real customer or personal data
+❌ Commercial use without proper security measures
+❌ Public deployment without Cloudflare protection
+❌ Use in environments containing sensitive information
+❌ Integration with real payment or financial systems
+❌ Any use that could expose real users to security risks
+
+CONDITIONS:
+
+1. SECURITY ACKNOWLEDGMENT
+   You acknowledge that this software contains intentional security 
+   vulnerabilities including but not limited to:
+   - SQL injection vulnerabilities
+   - Credential exposure vulnerabilities  
+   - Missing authentication controls
+   - Insufficient input validation
+   - Debug mode enabled in production
+
+2. NO WARRANTY
+   This software is provided "AS IS" without warranty of any kind,
+   express or implied, including but not limited to the warranties
+   of merchantability, fitness for a particular purpose and
+   noninfringement.
+
+3. LIMITATION OF LIABILITY
+   In no event shall the authors or copyright holders be liable for
+   any claim, damages or other liability, whether in an action of
+   contract, tort or otherwise, arising from, out of or in connection
+   with the software or the use or other dealings in the software.
+
+4. EDUCATIONAL DISCLAIMER
+   This software is designed to demonstrate security vulnerabilities
+   and should only be used in controlled environments for educational
+   purposes. Users are responsible for ensuring appropriate security
+   measures are in place when using this software.
+
+5. CLOUDFLARE PROTECTION REQUIREMENT
+   If deployed on public networks, this software MUST be protected
+   by Cloudflare or equivalent security services to prevent actual
+   exploitation of the intentional vulnerabilities.
+
+6. RESPONSIBLE DISCLOSURE
+   If you discover unintentional security vulnerabilities in addition
+   to the documented intentional ones, please report them responsibly
+   to the project maintainers.
+
+By using this software, you agree to these terms and acknowledge that
+you understand the security implications and will use it only for
+legitimate educational and demonstration purposes.
+
+ATTRIBUTION:
+When using this software in presentations, training, or educational
+materials, please provide appropriate attribution to the Cloudflare
+Security Demo Project.
+
+SUPPORT:
+This software is provided for educational purposes without official
+support guarantees. Community support may be available through the
+project's GitHub repository.
+
+---
+
+This is not a standard open source license. This software is specifically
+designed for security demonstration and education, not for general use.
+
+For questions about licensing and permitted uses, please contact the
+project maintainers through the official GitHub repository.
+
+Last Updated: August 13, 2025

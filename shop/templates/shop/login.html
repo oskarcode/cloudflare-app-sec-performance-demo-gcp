@@ -1,0 +1,64 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Login - Cloudflare Demo Store{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Rate Limiting Demo:</strong> This login form can be used to test brute force protection.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                <div class="text-center">
+                    <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5>Login Security Testing:</h5>
+                <p>This login form demonstrates:</p>
+                <ul>
+                    <li><strong>Rate Limiting:</strong> Prevent brute force attacks</li>
+                    <li><strong>Bot Detection:</strong> Identify automated login attempts</li>
+                    <li><strong>Challenge Pages:</strong> CAPTCHA or JS challenges for suspicious behavior</li>
+                    <li><strong>IP Blocking:</strong> Block suspicious IP addresses</li>
+                </ul>
+                <div class="alert alert-info">
+                    <strong>Test Commands:</strong>
+                    <pre><code>for i in {1..10}; do curl -X POST "https://your-site.com/login" -d "username=admin&password=test$i"; done</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

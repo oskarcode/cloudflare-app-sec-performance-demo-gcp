@@ -1,0 +1,58 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Deployment
+*.pid
+gunicorn.log
+nginx.log
+
+# Security (don't commit real secrets)
+.env
+.env.local
+.env.backup
+secrets.txt
+config.ini
+
+# Static files (generated)
+staticfiles/
+collected-static/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Cloudflare sensitive data
+wrangler.toml.local
+.dev.vars
+
+# Personal notes and configs
+personal_notes.txt
+local_config.json
