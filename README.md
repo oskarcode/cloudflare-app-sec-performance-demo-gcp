@@ -451,36 +451,185 @@ chmod +x monitor.sh
 nohup ./monitor.sh > monitor.log 2>&1 &
 ```
 
-## 📁 Project Structure
+## 📁 Detailed Directory Structure
+
+### 🏠 Local Project Structure
 
 ```
-cloudflare_demo_ecommerce/
-├── README.md                    # This comprehensive guide
-├── requirements.txt             # Python dependencies
-├── manage.py                    # Django management script
-├── nginx.conf                   # Nginx configuration
-├── deploy.sh                    # Deployment automation
+cloudflare_demo_ecommerce/                      # Main project root
+├── 📄 README.md                                # This comprehensive documentation
+├── 📄 LICENSE                                  # Project license
+├── 📄 WORKFLOW_TEST.md                         # Git workflow test documentation
+├── 📄 requirements.txt                         # Python dependencies and versions
+├── 📄 manage.py                               # Django management script
+├── 📄 db.sqlite3                             # Local SQLite database
+├── 📄 django.log                             # Django application logs
+├── 📄 nginx.conf                             # Nginx server configuration
+├── 📄 wrangler.toml                          # Cloudflare Workers configuration
 │
-├── cloudflare_demo_ecommerce/   # Django project settings
-│   ├── settings.py              # Django configuration
-│   ├── urls.py                  # Main URL routing
-│   ├── wsgi.py                  # WSGI configuration
-│   └── asgi.py                  # ASGI configuration
+├── 🔧 Git Workflow Scripts
+│   ├── new-feature.sh                         # Start new feature branch
+│   ├── finish-feature.sh                     # Complete and merge feature
+│   ├── deploy-to-server.sh                   # Deploy to production server
+│   ├── setup-github.sh                       # Connect to GitHub repository
+│   └── git-workflow-help.sh                  # Show workflow commands
 │
-├── shop/                        # Main Django application
-│   ├── models.py                # Database models
-│   ├── views.py                 # View logic (including vulnerabilities)
-│   ├── urls.py                  # URL routing
-│   ├── templates/shop/          # HTML templates
-│   └── management/commands/     # Django management commands
+├── ☁️ Cloudflare Workers
+│   ├── flash-sale-rate-limiter.js            # Rate limiting for flash sales
+│   ├── admin-redirect-worker.js              # Admin portal protection
+│   └── deploy-worker.sh                      # Deploy workers to Cloudflare
 │
-├── static/                      # Intentionally exposed files
-│   ├── .git/secrets.txt         # Fake credentials
-│   ├── .env.backup              # Fake environment variables
-│   └── config/database.yml      # Fake database config
+├── 🏗️ Django Project Configuration
+│   └── cloudflare_demo_ecommerce/
+│       ├── __init__.py                        # Python package marker
+│       ├── settings.py                       # Django configuration (DEBUG, ALLOWED_HOSTS, etc.)
+│       ├── urls.py                           # Main URL routing configuration
+│       ├── wsgi.py                           # WSGI application entry point
+│       └── asgi.py                           # ASGI application entry point
 │
-└── staticfiles/                 # Collected static files
+├── 🛍️ Shop Application (Main Django App)
+│   └── shop/
+│       ├── __init__.py                        # Python package marker
+│       ├── admin.py                          # Django admin interface configuration
+│       ├── apps.py                           # Application configuration
+│       ├── models.py                         # Database models (Product, User, etc.)
+│       ├── views.py                          # View logic with intentional vulnerabilities
+│       ├── urls.py                           # Shop-specific URL routing
+│       ├── tests.py                          # Unit tests (placeholder)
+│       │
+│       ├── 🗃️ Database Management
+│       │   └── management/commands/
+│       │       ├── __init__.py
+│       │       └── populate_products.py      # Script to create demo products
+│       │
+│       ├── 📄 Database Migrations
+│       │   └── migrations/
+│       │       ├── __init__.py
+│       │       └── 0001_initial.py           # Initial database schema
+│       │
+│       └── 🎨 Frontend Templates
+│           └── templates/shop/
+│               ├── base.html                 # Base template with Bootstrap
+│               ├── home.html                 # Homepage with product catalog
+│               ├── product_detail.html       # Individual product pages
+│               ├── search.html               # Vulnerable search functionality
+│               ├── login.html                # User authentication
+│               ├── register.html             # User registration
+│               ├── contact.html              # Contact form
+│               ├── admin_portal.html         # Fake admin interface
+│               ├── flash_sale.html           # Rate limiting demo page
+│               ├── robots_welcome.html       # Bot magnet page
+│               ├── sitemap.html              # SEO bot attractor
+│               └── presentation.html         # Demo presentation page
+│
+├── 🎯 Intentionally Vulnerable Files
+│   └── static/
+│       └── config/
+│           └── database.yml                  # Fake database credentials
+│
+├── 📦 Generated Static Files
+│   └── staticfiles/                          # Collected Django static files
+│       └── admin/                           # Django admin interface assets
+│           ├── css/                         # Admin stylesheets
+│           ├── img/                         # Admin images and icons
+│           └── js/                          # Admin JavaScript files
+│
+└── 🐍 Python Virtual Environment
+    └── venv/                                # Isolated Python environment
 ```
+
+### 🖥️ Server Directory Structure (AWS EC2)
+
+```
+/home/ubuntu/                                   # Ubuntu user home directory
+├── 🚀 Deployment Script
+│   └── deploy.sh                              # Automated deployment script
+│
+└── 📁 Application Directory
+    └── cloudflare_demo_ecommerce/             # Cloned from GitHub repository
+        ├── 🐍 Python Environment
+        │   └── venv/                          # Server virtual environment
+        │       ├── bin/                       # Python executables
+        │       ├── lib/python3.10/site-packages/ # Installed packages
+        │       └── pyvenv.cfg                 # Environment configuration
+        │
+        ├── 🗃️ Database
+        │   └── db.sqlite3                     # Production SQLite database
+        │
+        ├── 📊 Logs
+        │   └── django.log                     # Django application logs
+        │
+        ├── 📦 Static Files
+        │   └── staticfiles/                   # Collected static files for nginx
+        │
+        └── [All project files from GitHub]    # Complete project structure
+```
+
+### 🌐 Nginx Configuration Structure
+
+```
+/etc/nginx/                                    # Nginx root directory
+├── nginx.conf                                # Main nginx configuration
+├── sites-available/                          # Available site configurations
+│   ├── default                              # Default nginx site (disabled)
+│   ├── demo.oskarcode.com                    # Our site configuration
+│   └── [backup files]                       # Previous configurations
+│
+├── sites-enabled/                            # Active site configurations
+│   └── demo.oskarcode.com -> ../sites-available/demo.oskarcode.com
+│
+└── mime.types                               # MIME type definitions
+```
+
+### 🔐 SSL Certificate Structure (Let's Encrypt)
+
+```
+/etc/letsencrypt/                             # Let's Encrypt directory
+├── live/demo.oskarcode.com/                  # Live certificates
+│   ├── fullchain.pem                        # Full certificate chain
+│   ├── privkey.pem                          # Private key
+│   ├── cert.pem                             # Certificate only
+│   └── chain.pem                            # Certificate chain
+│
+├── archive/demo.oskarcode.com/               # Certificate archive
+└── renewal/demo.oskarcode.com.conf           # Auto-renewal configuration
+```
+
+### 🔄 Process Management
+
+```
+System Processes:
+├── 🌐 nginx (Port 80/443)
+│   ├── Master process (root)
+│   └── Worker processes (www-data)
+│
+├── 🐍 Django (Port 8000)
+│   └── python manage.py runserver 0.0.0.0:8000
+│
+├── 🔄 Certbot (Cron job)
+│   └── Automatic certificate renewal
+│
+└── 🖥️ SSH Service (Port 22)
+    └── Remote access for deployment
+```
+
+### 📊 Key File Purposes
+
+#### **Configuration Files:**
+- **settings.py** - Django configuration with DEBUG, ALLOWED_HOSTS, database settings
+- **nginx.conf** - Reverse proxy configuration, SSL settings, static file serving
+- **wrangler.toml** - Cloudflare Workers deployment configuration
+- **requirements.txt** - Python package dependencies with versions
+
+#### **Security Demo Files:**
+- **views.py** - Contains intentional SQL injection vulnerabilities
+- **static/config/database.yml** - Fake credentials for access rule testing
+- **templates/robots_welcome.html** - Bot magnet for bot management demos
+
+#### **Automation Scripts:**
+- **deploy.sh** (server) - Automated deployment with dependency management
+- **new-feature.sh** (local) - Creates feature branches with proper naming
+- **deploy-to-server.sh** (local) - One-command production deployment
 
 ## 🎯 Features & Vulnerabilities
 
