@@ -471,12 +471,25 @@ cloudflare_demo_ecommerce/                      # Main project root
 ├── 📄 nginx.conf                             # Nginx server configuration
 ├── 📄 wrangler.toml                          # Cloudflare Workers configuration
 │
-├── 🔧 Git Workflow Scripts
-│   ├── new-feature.sh                         # Start new feature branch
-│   ├── finish-feature.sh                     # Complete and merge feature
-│   ├── deploy-to-server.sh                   # Deploy to production server
-│   ├── setup-github.sh                       # Connect to GitHub repository
-│   └── git-workflow-help.sh                  # Show workflow commands
+├── 📁 scripts/                                # Organized automation scripts
+│   ├── git/                                  # Git workflow scripts
+│   │   ├── new-feature.sh                    # Start new feature branch
+│   │   ├── finish-feature.sh                 # Complete and merge feature
+│   │   └── git-workflow-help.sh              # Show workflow commands
+│   ├── deployment/                           # Server deployment scripts
+│   │   ├── deploy-to-server.sh               # Deploy to production server
+│   │   └── setup-production-env.sh           # Setup production environment
+│   ├── cloudflare/                           # Cloudflare Workers scripts
+│   │   └── deploy-worker.sh                  # Deploy workers to Cloudflare
+│   ├── setup/                                # Initial setup scripts
+│   │   └── setup-github.sh                   # Connect to GitHub repository
+│   └── README.md                             # Script documentation
+│
+├── 🔗 Script Shortcuts (Root Level)
+│   ├── new-feature.sh                        # → scripts/git/new-feature.sh
+│   ├── finish-feature.sh                     # → scripts/git/finish-feature.sh
+│   ├── deploy-to-server.sh                   # → scripts/deployment/deploy-to-server.sh
+│   └── git-workflow-help.sh                  # → scripts/git/git-workflow-help.sh
 │
 ├── ☁️ Cloudflare Workers
 │   ├── flash-sale-rate-limiter.js            # Rate limiting for flash sales
