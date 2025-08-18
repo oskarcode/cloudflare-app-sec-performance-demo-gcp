@@ -41,6 +41,10 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Setup environment variables
+cp .env.template .env
+# Edit .env with your actual values (SECRET_KEY is auto-generated)
+
 # Setup database
 python manage.py migrate
 python manage.py populate_products
