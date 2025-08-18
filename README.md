@@ -127,25 +127,80 @@ docker-compose exec web python manage.py populate_products
 docker-compose ps
 ```
 
-## 🔄 Updating Deployment
+## 🔄 Git Workflow & Deployment
 
-### Sync Local Changes to Remote
+This project uses a **branch-per-feature** workflow with automated deployment scripts for easy management.
+
+### 📋 Available Scripts
+
+- `./git-workflow-help.sh` - Show workflow help and commands
+- `./new-feature.sh "feature-name"` - Start new feature branch
+- `./finish-feature.sh "commit message"` - Finish and merge feature
+- `./deploy-to-server.sh` - Deploy to production server
+- `./setup-github.sh` - Connect local repo to GitHub (one-time setup)
+
+### 🔄 Complete Workflow Example
+
 ```bash
-# From local machine
-rsync -avz --delete -e "ssh -i /path/to/your-key.pem" \
-  ./cloudflare_demo_ecommerce/ \
-  ubuntu@YOUR_SERVER_IP:/home/ubuntu/cloudflare_demo_ecommerce/ \
-  --exclude 'venv/' --exclude '*.pyc' --exclude '__pycache__/' --exclude 'db.sqlite3'
+# 1. Start new feature
+./new-feature.sh "add-payment-system"
 
-# Restart services on remote
-ssh -i /path/to/your-key.pem ubuntu@YOUR_SERVER_IP \
-  "cd /home/ubuntu/cloudflare_demo_ecommerce && \
-   pkill -f 'manage.py runserver' && \
-   source venv/bin/activate && \
-   nohup python manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &"
+# 2. Make your changes (edit files, test locally)
+# ... edit code, test with python manage.py runserver ...
 
-# Reload nginx if config changed
-ssh -i /path/to/your-key.pem ubuntu@YOUR_SERVER_IP "sudo systemctl reload nginx"
+# 3. Finish feature (commits, merges to main, pushes)
+./finish-feature.sh "Add Stripe payment integration with checkout flow"
+
+# 4. Deploy to server
+./deploy-to-server.sh
+```
+
+### 🌿 Branch Naming Convention
+
+The `new-feature.sh` script automatically creates appropriate branch prefixes:
+
+- `feature/your-feature` - New features
+- `fix/your-bug-fix` - Bug fixes  
+- `enhance/your-improvement` - Enhancements
+- `update/your-update` - Updates
+- `refactor/your-refactor` - Code refactoring
+
+### 🚀 First-Time Setup
+
+1. **Create GitHub Repository:**
+   - Go to GitHub.com
+   - Create new repository: `cloudflare-demo-ecommerce`
+   - Don't initialize with README (we have one)
+
+2. **Connect to GitHub:**
+   ```bash
+   ./setup-github.sh
+   # Follow prompts to enter your GitHub username
+   ```
+
+3. **Deploy to Server:**
+   ```bash
+   ./deploy-to-server.sh
+   # First deployment will clone repo and setup environment
+   ```
+
+### 🔧 Manual Git Commands (if needed)
+
+```bash
+# Check status
+git status
+git branch
+
+# View commit history  
+git log --oneline
+
+# Stash changes temporarily
+git stash
+git stash pop
+
+# See differences
+git diff
+git diff --cached
 ```
 
 ## ☁️ Cloudflare Configuration
