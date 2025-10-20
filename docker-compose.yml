@@ -12,15 +12,12 @@ services:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-      - db_volume:/app/db
     ports:
       - "8000:8000"
     environment:
       - DEBUG=False
       - SECRET_KEY=django-insecure-production-key-change-this
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,34.86.12.252
-    depends_on:
-      - db
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
@@ -42,15 +39,6 @@ services:
       - web
     restart: unless-stopped
 
-  # SQLite Database Container (simple file storage)
-  db:
-    image: alpine:latest
-    command: sh -c "apk add --no-cache sqlite && mkdir -p /data && touch /data/db.sqlite3 && tail -f /dev/null"
-    volumes:
-      - db_volume:/data
-    restart: unless-stopped
-
 volumes:
   static_volume:
   media_volume:
-  db_volume:
