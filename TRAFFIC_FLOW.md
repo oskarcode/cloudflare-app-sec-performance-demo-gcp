@@ -63,6 +63,24 @@ flowchart LR
     Web -->|ORM| DB
 ```
 
+#### Node Test Callouts
+- Browser/Client:
+  - `curl -Iv https://appdemo.oskarcode.com/`
+- Cloudflare DNS/Edge:
+  - `dig +short appdemo.oskarcode.com`
+  - Check `cf-ray` in response headers
+- Nginx container (origin entry):
+  - `curl -I http://ORIGIN_IP/health/`
+  - `docker-compose exec -T nginx nginx -t`
+- Nginx → Web upstream:
+  - `docker-compose exec -T nginx wget -S -O- http://web:8000/health/`
+- Web (Gunicorn+Django):
+  - `docker-compose exec -T web curl -I http://localhost:8000/health/`
+  - `docker-compose exec -T web curl -I http://localhost:8000/.env.backup/`
+- SQLite persistence/permissions:
+  - `ls -la db.sqlite3`
+  - `sudo chown -R 1000:1000 /home/oskar/cloudflare-demo-ecommerce`
+
 ### Docker Topology (Mermaid)
 ```mermaid
 flowchart LR
