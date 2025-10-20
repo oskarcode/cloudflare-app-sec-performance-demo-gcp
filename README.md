@@ -698,4 +698,4 @@ This project is for **demonstration purposes only**. Not licensed for production
 
 ---
 
-**🎯 Current Status:** Production deployed on AWS EC2 with nginx + Django, ready for Cloudflare security demonstrations.
+**🎯 Current Status:** Production deployed on gcp with nginx + Django, ready for Cloudflare security demonstrations.
