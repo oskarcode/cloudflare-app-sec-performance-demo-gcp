@@ -80,8 +80,8 @@ python manage.py runserver 0.0.0.0:8000
 
 #### Prerequisites
 - Google Cloud SDK installed locally
-- Access to GCP project: `globalse-198312`
-- VM: `oskar-appdemo-se` in zone `us-east4-b`
+- Access to GCP project: `your-gcp-project-id`
+- VM: `your-vm-name` in zone `your-gcp-zone`
 
 #### One-Command Deployment
 ```bash
@@ -100,7 +100,7 @@ This script will:
 #### Manual VM Setup (First Time Only)
 ```bash
 # Connect to VM
-gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
+gcloud compute ssh --zone "your-gcp-zone" "your-vm-name" --project "your-gcp-project-id"
 
 # Install Docker and Docker Compose
 sudo apt update
@@ -224,9 +224,9 @@ git push origin main
 ## ☁️ Cloudflare Configuration
 
 ### DNS Setup
-1. **Add A Record:** `appdemo.oskarcode.com` → `34.86.12.252` (GCP VM IP)
+1. **Add A Record:** `your-domain.com` → `YOUR_VM_IP`
 2. **Enable Proxy:** Orange cloud the DNS record
-3. **Add WWW Record:** `www.appdemo.oskarcode.com` → `34.86.12.252`
+3. **Add WWW Record:** `www.your-domain.com` → `YOUR_VM_IP`
 
 ### SSL/TLS Configuration
 1. **SSL Mode:** Set to "Full" or "Full (Strict)" 
