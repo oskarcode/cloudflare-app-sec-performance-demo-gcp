@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 from .models import Product
 import json
 
@@ -119,3 +120,73 @@ def flash_sale(request):
     # Get featured products for the flash sale
     products = Product.objects.all()[:6]  # Show 6 products
     return render(request, 'shop/flash_sale.html', {'products': products})
+
+def git_secrets(request):
+    """
+    Intentionally vulnerable endpoint exposing git secrets for Cloudflare WAF testing.
+    This endpoint should be blocked by Cloudflare's managed rules.
+    """
+    # Simulate exposed git secrets and sensitive information
+    fake_secrets = {
+        'database_password': 'super_secret_db_password_123',
+        'api_key': 'sk-1234567890abcdefghijklmnopqrstuvwxyz',
+        'aws_access_key': 'AKIAIOSFODNN7EXAMPLE',
+        'aws_secret_key': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        'github_token': 'ghp_1234567890abcdefghijklmnopqrstuvwxyz',
+        'jwt_secret': 'my-super-secret-jwt-key-that-should-never-be-exposed',
+        'encryption_key': 'aes256-key-that-should-be-secure',
+        'admin_password': 'admin123!@#',
+        'stripe_secret': 'sk_test_1234567890abcdefghijklmnopqrstuvwxyz',
+        'paypal_client_secret': 'paypal-secret-key-123456789'
+    }
+    
+    return render(request, 'shop/git_secrets.html', {'secrets': fake_secrets})
+
+def env_backup(request):
+    """
+    Intentionally vulnerable endpoint exposing .env.backup file for Cloudflare WAF testing.
+    This endpoint should be blocked by Cloudflare's managed rules.
+    """
+    # Simulate exposed environment variables
+    fake_env_vars = {
+        'SECRET_KEY': 'django-insecure-super-secret-key-for-production-123456789',
+        'DEBUG': 'True',
+        'DATABASE_URL': 'postgresql://user:password123@localhost:5432/ecommerce_db',
+        'REDIS_URL': 'redis://localhost:6379/0',
+        'EMAIL_HOST_PASSWORD': 'email-password-123',
+        'AWS_ACCESS_KEY_ID': 'AKIAIOSFODNN7EXAMPLE',
+        'AWS_SECRET_ACCESS_KEY': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+        'STRIPE_SECRET_KEY': 'sk_test_1234567890abcdefghijklmnopqrstuvwxyz',
+        'PAYPAL_CLIENT_SECRET': 'paypal-secret-key-123456789',
+        'JWT_SECRET_KEY': 'jwt-secret-key-that-should-be-secure',
+        'ENCRYPTION_KEY': 'aes256-encryption-key-for-sensitive-data',
+        'ADMIN_EMAIL': 'admin@example.com',
+        'ADMIN_PASSWORD': 'admin123!@#'
+    }
+    
+    return render(request, 'shop/env_backup.html', {'env_vars': fake_env_vars})
+
+def health_check(request):
+    """
+    Health check endpoint for load balancers and monitoring.
+    """
+    from django.db import connection
+    from django.http import JsonResponse
+    
+    try:
+        # Test database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'database': 'connected',
+            'timestamp': timezone.now().isoformat()
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e),
+            'timestamp': timezone.now().isoformat()
+        }, status=503)

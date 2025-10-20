@@ -87,8 +87,11 @@
                                 <li><a href="{% url 'search' %}" class="text-light text-decoration-none">
                                     <i class="fas fa-search"></i> Search - <span class="text-muted">SQL Injection</span>
                                 </a></li>
-                                <li><a href="/.git/secrets.txt" class="text-light text-decoration-none">
+                                <li><a href="{% url 'git_secrets' %}" class="text-light text-decoration-none">
                                     <i class="fab fa-git-alt"></i> Git Secrets - <span class="text-muted">File Exposure</span>
+                                </a></li>
+                                <li><a href="{% url 'env_backup' %}" class="text-light text-decoration-none">
+                                    <i class="fas fa-file-code"></i> .env.backup - <span class="text-muted">Config Exposure</span>
                                 </a></li>
                                 <li><strong>Custom Rules:</strong></li>
                                 <li><a href="{% url 'contact' %}" class="text-light text-decoration-none">

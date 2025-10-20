@@ -138,7 +138,10 @@
                         <div class="card-body">
                             <h6><i class="fas fa-key"></i> Credential Leaking</h6>
                             <p class="mb-1">Sensitive files and API keys exposed to attackers</p>
-                            <small><a href="/.env.backup">Test: /.env.backup</a></small>
+                            <div class="mt-2">
+                                <small><a href="/.env.backup" class="btn btn-sm btn-outline-danger me-2">Test: /.env.backup</a></small>
+                                <small><a href="/git-secrets/" class="btn btn-sm btn-outline-danger">Test: Git Secrets</a></small>
+                            </div>
                         </div>
                     </div>
 
@@ -190,11 +193,18 @@
                             <h6><i class="fas fa-shield-alt"></i> WAF Protection</h6>
                         </div>
                         <div class="card-body">
-                            <ul class="mb-0">
+                            <ul class="mb-3">
                                 <li><strong>Managed Rules:</strong> SQL injection protection (search functionality)</li>
                                 <li><strong>Custom Rules:</strong> Challenge suspicious behavior (contact form)</li>
                                 <li><strong>Target:</strong> Git secrets exposure protection</li>
                             </ul>
+                            <div class="mt-2">
+                                <strong>Quick Demo Links:</strong>
+                                <div class="mt-1">
+                                    <a href="/.env.backup" class="btn btn-sm btn-outline-danger me-2">Test: /.env.backup</a>
+                                    <a href="/git-secrets/" class="btn btn-sm btn-outline-danger">Test: Git Secrets</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

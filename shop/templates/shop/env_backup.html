@@ -1,0 +1,137 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}.env.backup - Environment Variables Exposed{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">⚠️ CRITICAL SECURITY BREACH!</h4>
+                <p><strong>Environment variables and configuration files are exposed!</strong></p>
+                <p>This simulates a common vulnerability where backup files containing sensitive data are accessible.</p>
+                <hr>
+                <p class="mb-0">Cloudflare's managed rules should block access to files like .env.backup</p>
+            </div>
+
+            <h2>📁 .env.backup File Contents</h2>
+            <p class="text-muted">The following environment variables should never be publicly accessible:</p>
+
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5>🚨 Exposed Environment Variables</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-dark text-light p-3 rounded"><code># Environment Configuration File
+# WARNING: This file contains sensitive information!
+
+{% for key, value in env_vars.items %}{{ key }}={{ value }}
+{% endfor %}</code></pre>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning">
+                            <h6>🔍 What This Exposes</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li>Database credentials</li>
+                                <li>API keys and secrets</li>
+                                <li>Encryption keys</li>
+                                <li>Admin passwords</li>
+                                <li>Third-party service tokens</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6>🛡️ Cloudflare Protection</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li>File extension blocking</li>
+                                <li>Pattern matching for secrets</li>
+                                <li>Backup file detection</li>
+                                <li>Configuration file protection</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5>📋 Common Vulnerable File Patterns</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Configuration Files:</h6>
+                            <ul>
+                                <li><code>.env</code></li>
+                                <li><code>.env.backup</code></li>
+                                <li><code>.env.local</code></li>
+                                <li><code>config.php</code></li>
+                                <li><code>settings.py</code></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Backup Files:</h6>
+                            <ul>
+                                <li><code>database.sql</code></li>
+                                <li><code>backup.tar.gz</code></li>
+                                <li><code>dump.sql</code></li>
+                                <li><code>*.bak</code></li>
+                                <li><code>*.old</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <strong>Testing Instructions:</strong>
+                <ol class="mb-0 mt-2">
+                    <li>Try accessing this URL: <code>https://yourdomain.com/.env.backup</code></li>
+                    <li>Cloudflare should block the request and show a security page</li>
+                    <li>Check Cloudflare's Security Events for blocked requests</li>
+                    <li>Verify that managed rules are properly configured</li>
+                </ol>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'home' %}" class="btn btn-primary">← Back to Home</a>
+                <a href="{% url 'git_secrets' %}" class="btn btn-warning">View Git Secrets Test</a>
+                <a href="{% url 'presentation' %}" class="btn btn-secondary">Security Presentation</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+pre {
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+</style>
+{% endblock %}

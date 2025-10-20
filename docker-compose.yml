@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Django Application
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn cloudflare_demo_ecommerce.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - db_volume:/app/db
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=django-insecure-production-key-change-this
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,34.86.12.252
+      - DATABASE_URL=sqlite:///db/db.sqlite3
+    depends_on:
+      - db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/var/www/static:ro
+      - media_volume:/var/www/media:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # SQLite Database Container (simple file storage)
+  db:
+    image: alpine:latest
+    command: sh -c "apk add --no-cache sqlite && mkdir -p /data && touch /data/db.sqlite3 && tail -f /dev/null"
+    volumes:
+      - db_volume:/data
+    restart: unless-stopped
+
+volumes:
+  static_volume:
+  media_volume:
+  db_volume:
