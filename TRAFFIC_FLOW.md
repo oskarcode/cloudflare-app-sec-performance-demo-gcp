@@ -30,14 +30,63 @@ sequenceDiagram
 Browser ──TLS──> Cloudflare (DNS/WAF/CDN) ──HTTP──> Origin IP
                                           │
                                           ▼
-                                      Nginx (80)
-                                          │  proxy_pass
-                                          ▼
-                                   Gunicorn (web:8000)
-                                          │  ORM
-                                          ▼
-                                        SQLite
+                                  [Docker Host: GCP VM]
+                                          │
+                                          ├─ container: nginx (ports: 80,443)
+                                          │      │ proxy_pass http://web:8000
+                                          │      ▼
+                                          └─ container: web (Gunicorn+Django)
+                                                 │ ORM
+                                                 ▼
+                                              SQLite (host bind mount)
 ```
+
+---
+
+## Docker and Container Architecture
+
+### Compose Services
+- **nginx**: Reverse proxy serving `/static/` and forwarding dynamic requests to `web:8000`.
+- **web**: Gunicorn app server running Django, listening on port 8000.
+
+Defined in `docker-compose.yml` with volumes for static and media:
+- `static_volume` → mounted by nginx at `/var/www/static`
+- `media_volume` → mounted by nginx at `/var/www/media`
+
+### Networks
+- Both containers are on the default Compose bridge network.
+- Service DNS names (e.g., `web`) resolve within the network.
+- Nginx upstream uses `proxy_pass http://django;` where `django` upstream points to `web:8000` in `nginx.conf`.
+
+### Volumes and Persistence
+- Static files are collected to `/app/staticfiles` (web) → mapped to `static_volume` → exposed to nginx at `/var/www/static`.
+- Media files similarly flow via `media_volume`.
+- SQLite database file `db.sqlite3` lives on the host bind mount in the project directory. Permissions must match container user UID 1000 (`appuser`).
+
+### Images and Build
+- `web` is built from the repository `Dockerfile` (Python 3.11 slim), installs dependencies, creates `appuser`, and runs Gunicorn.
+- `nginx` uses the `nginx:alpine` image and mounts `nginx.conf` from the repo.
+
+### Container Lifecycle
+- Start: `docker-compose up -d --build`
+- Stop: `docker-compose down`
+- Status: `docker-compose ps`
+- Logs: `docker-compose logs nginx` and `docker-compose logs web`
+- Health:
+  - App: `curl -I http://localhost/health/` (nginx)
+  - Inside web: `docker-compose exec -T web curl -I http://localhost:8000/health/`
+
+### Docker-Focused Troubleshooting
+- **Port conflicts**: `sudo ss -lntp | grep ':80\|:443\|:8000'`
+- **Permissions (SQLite)**:
+  - Ensure ownership: `sudo chown -R 1000:1000 /home/oskar/cloudflare-demo-ecommerce`
+  - Validate writes: `docker-compose exec -T web python manage.py migrate --check`
+- **Network reachability**:
+  - From nginx to web: `docker-compose exec -T nginx wget -S -O- http://web:8000/health/`
+- **Rebuild after config changes**: `docker-compose up -d --build`
+- **Environment verification**: `docker-compose exec -T web env | sort | grep -E 'DEBUG|ALLOWED_HOSTS|SECRET_KEY'`
+
+---
 
 ### 1) Browser / Client
 - Role: Initiates HTTPS request to `appdemo.oskarcode.com`.
