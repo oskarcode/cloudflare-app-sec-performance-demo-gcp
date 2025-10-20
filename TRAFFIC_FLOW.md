@@ -2,6 +2,43 @@
 
 This document explains the full request path for `https://appdemo.oskarcode.com`, what each hop does, key headers, how to test each segment, and how to troubleshoot issues at every layer.
 
+### Architecture Diagram (Mermaid)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant CF as Cloudflare Edge (WAF/CDN)
+    participant VM as GCP VM (Origin)
+    participant N as Nginx (container)
+    participant W as Web (Gunicorn+Django)
+    participant DB as SQLite
+
+    B->>CF: 1. HTTPS request (TLS at Cloudflare)
+    CF-->>B: 2. Apply WAF/CDN, send response or forward
+    CF->>N: 3. HTTP request to origin (X-Forwarded-*, CF-Connecting-IP)
+    Note over VM: Port 80 open; Docker network routes to Nginx
+    N->>W: 4. Proxy to upstream web:8000 (Gunicorn)
+    W->>DB: 5. ORM query (SQLite file)
+    DB-->>W: 6. Result rows
+    W-->>N: 7. Django response
+    N-->>CF: 8. Proxied response
+    CF-->>B: 9. Final HTTPS response (HTTP/2)
+```
+
+### ASCII Overview
+```
+Browser ──TLS──> Cloudflare (DNS/WAF/CDN) ──HTTP──> Origin IP
+                                          │
+                                          ▼
+                                      Nginx (80)
+                                          │  proxy_pass
+                                          ▼
+                                   Gunicorn (web:8000)
+                                          │  ORM
+                                          ▼
+                                        SQLite
+```
+
 ### 1) Browser / Client
 - Role: Initiates HTTPS request to `appdemo.oskarcode.com`.
 - Key behavior: Uses DNS to resolve domain. Sends TLS handshake and HTTP request.
