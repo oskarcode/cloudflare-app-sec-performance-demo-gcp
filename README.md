@@ -2,8 +2,9 @@
 
 A deliberately vulnerable Django e-commerce application designed to demonstrate Cloudflare's security features including WAF, Bot Management, Rate Limiting, DDoS Protection, and Access Rules.
 
-**🌐 Live Demo:** https://demo.oskarcode.com  
-**📊 Presentation:** https://demo.oskarcode.com/presentation/
+**🌐 Live Demo:** https://appdemo.oskarcode.com  
+**📊 Presentation:** https://appdemo.oskarcode.com/presentation/  
+**🔧 Health Check:** https://appdemo.oskarcode.com/health/
 
 ## ⚠️ Security Warning
 
@@ -16,34 +17,53 @@ This application contains **intentional vulnerabilities** for demonstration purp
 
 This demo site showcases how Cloudflare's security features protect against common web application attacks:
 - **SQL Injection** - Vulnerable search endpoint for WAF testing
-- **Credential Exposure** - Exposed configuration files for access rule testing  
+- **Credential Exposure** - Exposed configuration files and git secrets for access rule testing  
 - **Bot Attacks** - Bot-attractive endpoints for bot management testing
 - **Rate Limiting** - API endpoints for rate limiting demonstration
 - **DDoS Simulation** - Load testing endpoints
 
+## 🏗️ Architecture
+
+**Current Deployment:** Google Cloud Platform VM with Docker Compose
+- **Web Server:** Nginx (reverse proxy)
+- **Application:** Django 5.2.5 with Gunicorn
+- **Database:** SQLite (for simplicity)
+- **Containerization:** Docker Compose for easy deployment
+- **Domain:** appdemo.oskarcode.com
+
 ## 🔧 Development Setup
 
 ### Prerequisites
-- Python 3.10+
-- Django 5.2+
+- Docker & Docker Compose
 - Git
+- Google Cloud SDK (for deployment)
 
-### Local Development
+### Local Development with Docker
 ```bash
-# Clone and setup
-git clone <repository-url>
-cd cloudflare_demo_ecommerce
+# Clone repository
+git clone https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp.git
+cd cloudflare-app-sec-performance-demo-gcp
 
+# Start development environment
+docker-compose up -d --build
+
+# Populate database with demo products
+docker-compose exec web python manage.py populate_products
+
+# Check status
+docker-compose ps
+```
+
+Visit http://localhost:8000 to see the application.
+
+### Traditional Python Setup (Alternative)
+```bash
 # Create virtual environment
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Setup environment variables
-cp .env.template .env
-# Edit .env with your actual values (SECRET_KEY is auto-generated)
 
 # Setup database
 python manage.py migrate
@@ -54,11 +74,49 @@ python manage.py collectstatic --noinput
 python manage.py runserver 0.0.0.0:8000
 ```
 
-Visit http://localhost:8000 to see the application.
-
 ## 🚀 Production Deployment
 
-### AWS EC2 Deployment (Current Setup)
+### Google Cloud Platform VM Deployment (Current Setup)
+
+#### Prerequisites
+- Google Cloud SDK installed locally
+- Access to GCP project: `globalse-198312`
+- VM: `oskar-appdemo-se` in zone `us-east4-b`
+
+#### One-Command Deployment
+```bash
+# Deploy to production VM
+./deploy-production.sh
+```
+
+This script will:
+1. Connect to your GCP VM
+2. Pull latest code from GitHub
+3. Build and start Docker containers
+4. Configure Nginx reverse proxy
+5. Run health checks
+6. Verify deployment
+
+#### Manual VM Setup (First Time Only)
+```bash
+# Connect to VM
+gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
+
+# Install Docker and Docker Compose
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin
+sudo systemctl enable docker
+sudo usermod -aG docker $USER
+
+# Clone repository
+git clone https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp.git
+cd cloudflare-app-sec-performance-demo-gcp
+
+# Start application
+docker-compose up -d --build
+```
+
+### AWS EC2 Deployment (Legacy)
 
 #### 1. Server Setup
 ```bash
@@ -131,88 +189,44 @@ docker-compose exec web python manage.py populate_products
 docker-compose ps
 ```
 
+## 📚 Documentation
+
+### Comprehensive Guides
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment and maintenance guide
+- **[VM_MONITORING_GUIDE.md](VM_MONITORING_GUIDE.md)** - VM monitoring and troubleshooting
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Essential commands cheat sheet
+
+### Key Files
+- **`docker-compose.yml`** - Container orchestration
+- **`Dockerfile`** - Application containerization
+- **`nginx.conf`** - Reverse proxy configuration
+- **`deploy-production.sh`** - Automated deployment script
+- **`env.production`** - Production environment variables
+
 ## 🔄 Git Workflow & Deployment
 
-This project uses a **branch-per-feature** workflow with automated deployment scripts for easy management.
-
-### 📋 Available Scripts
-
-- `./git-workflow-help.sh` - Show workflow help and commands
-- `./new-feature.sh "feature-name"` - Start new feature branch
-- `./finish-feature.sh "commit message"` - Finish and merge feature
-- `./deploy-to-server.sh` - Deploy to production server
-- `./setup-github.sh` - Connect local repo to GitHub (one-time setup)
-
-### 🔄 Complete Workflow Example
-
+### Simple Workflow
 ```bash
-# 1. Start new feature
-./new-feature.sh "add-payment-system"
+# 1. Make changes locally
+git add .
+git commit -m "Your changes"
+git push origin main
 
-# 2. Make your changes (edit files, test locally)
-# ... edit code, test with python manage.py runserver ...
-
-# 3. Finish feature (commits, merges to main, pushes)
-./finish-feature.sh "Add Stripe payment integration with checkout flow"
-
-# 4. Deploy to server
-./deploy-to-server.sh
+# 2. Deploy to production
+./deploy-production.sh
 ```
 
-### 🌿 Branch Naming Convention
-
-The `new-feature.sh` script automatically creates appropriate branch prefixes:
-
-- `feature/your-feature` - New features
-- `fix/your-bug-fix` - Bug fixes  
-- `enhance/your-improvement` - Enhancements
-- `update/your-update` - Updates
-- `refactor/your-refactor` - Code refactoring
-
-### 🚀 First-Time Setup
-
-1. **Create GitHub Repository:**
-   - Go to GitHub.com
-   - Create new repository: `cloudflare-demo-ecommerce`
-   - Don't initialize with README (we have one)
-
-2. **Connect to GitHub:**
-   ```bash
-   ./setup-github.sh
-   # Follow prompts to enter your GitHub username
-   ```
-
-3. **Deploy to Server:**
-   ```bash
-   ./deploy-to-server.sh
-   # First deployment will clone repo and setup environment
-   ```
-
-### 🔧 Manual Git Commands (if needed)
-
-```bash
-# Check status
-git status
-git branch
-
-# View commit history  
-git log --oneline
-
-# Stash changes temporarily
-git stash
-git stash pop
-
-# See differences
-git diff
-git diff --cached
-```
+### Available Scripts
+- **`deploy-production.sh`** - Deploy to GCP VM (main deployment script)
+- **`new-feature.sh`** - Start new feature branch (if using feature branches)
+- **`finish-feature.sh`** - Complete and merge feature (if using feature branches)
 
 ## ☁️ Cloudflare Configuration
 
 ### DNS Setup
-1. **Add A Record:** `your-domain.com` → `YOUR_SERVER_IP`
+1. **Add A Record:** `appdemo.oskarcode.com` → `34.86.12.252` (GCP VM IP)
 2. **Enable Proxy:** Orange cloud the DNS record
-3. **Add WWW Record:** `www.your-domain.com` → `YOUR_SERVER_IP`
+3. **Add WWW Record:** `www.appdemo.oskarcode.com` → `34.86.12.252`
 
 ### SSL/TLS Configuration
 1. **SSL Mode:** Set to "Full" or "Full (Strict)" 
@@ -300,14 +314,14 @@ done
 
 ### Credential Exposure Testing
 ```bash
-# Test exposed files
-curl "$DEMO_URL/.git/secrets.txt"
-curl "$DEMO_URL/.env.backup" 
-curl "$DEMO_URL/config/database.yml"
+# Test exposed files (should be blocked by Cloudflare WAF)
+curl "https://appdemo.oskarcode.com/.env.backup"
+curl "https://appdemo.oskarcode.com/git-secrets/"
+curl "https://appdemo.oskarcode.com/config/database.yml"
 
 # Test common paths
-curl -I "$DEMO_URL/.git/config"
-curl -I "$DEMO_URL/wp-config.php"
+curl -I "https://appdemo.oskarcode.com/.git/config"
+curl -I "https://appdemo.oskarcode.com/wp-config.php"
 ```
 
 ## 🎬 Demo Scenarios
@@ -317,6 +331,7 @@ curl -I "$DEMO_URL/wp-config.php"
 2. **Attempt SQL Injection:** Enter `test' OR '1'='1' --`
 3. **Show Blocked Request:** Display Cloudflare Security Events
 4. **Try Advanced Injection:** Show various attack patterns blocked
+5. **Test Credential Exposure:** Try accessing `/git-secrets/` and `/.env.backup`
 
 ### Scenario 2: Rate Limiting Demo (3 minutes) 
 1. **Normal API Usage:** Show successful API calls
@@ -332,58 +347,71 @@ curl -I "$DEMO_URL/wp-config.php"
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+### Docker Issues
 
-#### Application Won't Start
+#### Containers Won't Start
 ```bash
-# Check Python version
-python3 --version
+# Check container status
+docker-compose ps
 
-# Check Django installation
-python3 -c "import django; print(django.get_version())"
+# View logs
+docker-compose logs web
+docker-compose logs nginx
 
-# Check database migrations
-python manage.py showmigrations
+# Restart containers
+docker-compose restart
 ```
 
 #### Database Issues
 ```bash
+# Check database file permissions
+ls -la db.sqlite3
+
+# Fix permissions
+sudo chown -R 1000:1000 ~/cloudflare-demo-ecommerce/
+
 # Reset database
-rm db.sqlite3
-python manage.py migrate
-python manage.py populate_products
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py populate_products
 ```
 
-#### Static Files Not Loading
+#### Application Not Responding
 ```bash
-# Collect static files
-python manage.py collectstatic --clear --noinput
+# Check health endpoint
+curl http://localhost:8000/health/
 
-# Check nginx configuration
-sudo nginx -t
-sudo systemctl status nginx
+# Check container logs
+docker-compose logs web | tail -20
+
+# Restart web container
+docker-compose restart web
 ```
 
-#### SSL/TLS Issues
+### VM Monitoring
 ```bash
-# Check certificate validity
-echo | openssl s_client -connect your-domain.com:443 -servername your-domain.com
+# Connect to VM
+gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
 
-# Verify nginx SSL config
-sudo nginx -t
-```
-
-### Performance Issues
-```bash
 # Check system resources
 free -h
 df -h
 
-# Monitor processes
-htop
+# Check Docker status
+docker-compose ps
+docker-compose logs --tail 10
+```
 
-# Check Django logs
-tail -f django.log
+### Performance Issues
+```bash
+# Check container resource usage
+docker stats
+
+# Check system resources
+free -h
+df -h
+
+# Monitor logs
+docker-compose logs -f web
 ```
 
 ## 🔄 Future Updates
@@ -391,68 +419,43 @@ tail -f django.log
 ### Adding New Features
 1. **Local Development:**
    ```bash
-   # Create feature branch
-   git checkout -b feature/new-feature
-   
-   # Make changes and test
-   python manage.py test
-   
-   # Commit changes
+   # Make changes locally
    git add .
    git commit -m "Add new feature"
+   git push origin main
    ```
 
 2. **Deploy to Production:**
    ```bash
-   # Sync changes
-   rsync -avz --delete -e "ssh -i /path/to/your-key.pem" \
-     ./ ubuntu@YOUR_SERVER_IP:/home/ubuntu/cloudflare_demo_ecommerce/ \
-     --exclude 'venv/' --exclude '*.pyc' --exclude '__pycache__/'
-   
-   # Restart services
-   ssh -i /path/to/your-key.pem ubuntu@YOUR_SERVER_IP \
-     "cd /home/ubuntu/cloudflare_demo_ecommerce && \
-      pkill -f 'manage.py runserver' && \
-      source venv/bin/activate && \
-      python manage.py migrate && \
-      python manage.py collectstatic --noinput && \
-      nohup python manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &"
+   # One-command deployment
+   ./deploy-production.sh
    ```
 
 ### Maintenance Tasks
 ```bash
 # Update dependencies
-pip install -r requirements.txt --upgrade
+docker-compose exec web pip install -r requirements.txt --upgrade
 
 # Update Django
-pip install Django --upgrade
-
-# Check for security updates
-pip audit
+docker-compose exec web pip install Django --upgrade
 
 # Update static files
-python manage.py collectstatic --noinput
+docker-compose exec web python manage.py collectstatic --noinput
 
 # Database maintenance
-python manage.py migrate
+docker-compose exec web python manage.py migrate
 ```
 
 ### Monitoring Setup
 ```bash
-# Basic monitoring script
-cat > monitor.sh << 'EOF'
-#!/bin/bash
-while true; do
-  echo "=== $(date) ==="
-  curl -s http://localhost:8000/health/ || echo "Django down"
-  sudo systemctl is-active nginx || echo "Nginx down"
-  echo ""
-  sleep 60
-done
-EOF
+# Connect to VM for monitoring
+gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
 
-chmod +x monitor.sh
-nohup ./monitor.sh > monitor.log 2>&1 &
+# Check application health
+curl http://localhost:8000/health/
+
+# Monitor container logs
+docker-compose logs -f web
 ```
 
 ## 📁 Detailed Directory Structure
@@ -698,4 +701,6 @@ This project is for **demonstration purposes only**. Not licensed for production
 
 ---
 
-**🎯 Current Status:** Production deployed on gcp with nginx + Django, ready for Cloudflare security demonstrations.
+**🎯 Current Status:** Production deployed on GCP VM with Docker Compose + Nginx + Django, ready for Cloudflare security demonstrations.
+
+**📚 Documentation:** See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md), [VM_MONITORING_GUIDE.md](VM_MONITORING_GUIDE.md), and [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for detailed guides.
