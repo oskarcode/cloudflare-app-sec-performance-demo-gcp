@@ -8,7 +8,7 @@ set -e
 VM_ZONE="us-east4-b"
 VM_NAME="oskar-appdemo-se"
 PROJECT_ID="globalse-198312"
-APP_DIR="~/cloudflare-demo-ecommerce"
+APP_DIR="/home/oskar/cloudflare-demo-ecommerce"
 REPO_URL="https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp.git"
 
 echo "🚀 Starting production deployment..."
@@ -19,7 +19,7 @@ echo "Repository: $REPO_URL"
 # Deploy on VM
 echo "📥 Pulling latest code and deploying on VM..."
 gcloud compute ssh --zone "$VM_ZONE" "$VM_NAME" --project "$PROJECT_ID" --command "
-cd ~/cloudflare-demo-ecommerce && \
+cd /home/oskar/cloudflare-demo-ecommerce && \
 echo '📥 Pulling latest changes from Git...' && \
 git pull origin main && \
 echo '🛑 Stopping existing containers...' && \
