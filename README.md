@@ -195,6 +195,7 @@ docker-compose ps
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment and maintenance guide
 - **[VM_MONITORING_GUIDE.md](VM_MONITORING_GUIDE.md)** - VM monitoring and troubleshooting
 - **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Essential commands cheat sheet
+- **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)** - Complete server migration guide
 
 ### Key Files
 - **`docker-compose.yml`** - Container orchestration
