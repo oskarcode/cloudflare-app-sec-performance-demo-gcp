@@ -45,6 +45,40 @@ Browser ──TLS──> Cloudflare (DNS/WAF/CDN) ──HTTP──> Origin IP
 
 ## Docker and Container Architecture
 
+### Docker Topology (Mermaid)
+```mermaid
+flowchart LR
+    subgraph GCP_VM[Docker Host: GCP VM]
+        subgraph net[Compose Bridge Network]
+            Nginx[nginx:alpine\nports: 80,443\nmount: nginx.conf] -->|proxy_pass http://web:8000| Web[web (Gunicorn+Django)\nport: 8000]
+        end
+        StaticVol[(static_volume\n/var/www/static)]
+        MediaVol[(media_volume\n/var/www/media)]
+        DB[(db.sqlite3\nHost bind mount)]
+    end
+
+    CF[Cloudflare Edge] -->|HTTP 80| Nginx
+    Web -->|collectstatic| StaticVol
+    Web -->|media writes| MediaVol
+    Web -->|ORM| DB
+```
+
+### Docker Topology (Mermaid)
+```mermaid
+flowchart LR
+  subgraph GCP_VM[Docker Host: GCP VM]
+    subgraph net[Docker Bridge Network]
+      NGINX[nginx:alpine\nports: 80,443\nmounts: nginx.conf, static/media]
+      WEB[web (Gunicorn+Django)\nport: 8000\nuser: appuser (UID 1000)]
+      NGINX ---|proxy_pass http://web:8000| WEB
+    end
+    DB[(db.sqlite3)\nhost bind mount]
+    WEB ---|ORM file I/O| DB
+  end
+
+  CF[Cloudflare Edge\nDNS/WAF/CDN/TLS] -->|HTTP| NGINX
+```
+
 ### Compose Services
 - **nginx**: Reverse proxy serving `/static/` and forwarding dynamic requests to `web:8000`.
 - **web**: Gunicorn app server running Django, listening on port 8000.
