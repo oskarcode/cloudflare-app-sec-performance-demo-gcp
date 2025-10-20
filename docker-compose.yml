@@ -19,7 +19,6 @@ services:
       - DEBUG=False
       - SECRET_KEY=django-insecure-production-key-change-this
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,34.86.12.252
-      - DATABASE_URL=sqlite:///db/db.sqlite3
     depends_on:
       - db
     restart: unless-stopped
