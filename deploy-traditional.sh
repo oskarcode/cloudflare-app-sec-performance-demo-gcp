@@ -10,6 +10,7 @@ VM_NAME="oskar-appdemo-se"
 PROJECT_ID="globalse-198312"
 APP_DIR="/var/www/django-app"
 USER="oskarablimit"
+REPO_URL="https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp.git"
 
 echo "🚀 Starting traditional Django deployment..."
 echo "VM: $VM_NAME"
@@ -25,10 +26,13 @@ sudo mkdir -p $APP_DIR && \
 sudo chown $USER:$USER $APP_DIR
 "
 
-# Step 2: Copy project files to VM
-echo "📤 Copying project files to VM..."
-gcloud compute scp --zone "$VM_ZONE" --project "$PROJECT_ID" --recurse \
-    . "$VM_NAME:$APP_DIR"
+# Step 2: Clone Git repository
+echo "📥 Cloning Git repository..."
+gcloud compute ssh --zone "$VM_ZONE" "$VM_NAME" --project "$PROJECT_ID" --command "
+cd $APP_DIR && \
+git clone $REPO_URL . && \
+echo '✅ Git repository cloned successfully'
+"
 
 # Step 3: Set up virtual environment, install dependencies, run migrations, collect static
 echo "🐍 Setting up Python environment and Django..."

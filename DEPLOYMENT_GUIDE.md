@@ -54,7 +54,7 @@ Your Django ecommerce application is now running on Google Cloud VM with traditi
 
 3. **Deploy to production:**
    ```bash
-   # Use the update script for quick updates
+   # Use the Git-based update script for quick updates
    ./update-traditional.sh
    
    # Or use the full deployment script for fresh setup
@@ -62,12 +62,9 @@ Your Django ecommerce application is now running on Google Cloud VM with traditi
    ```
 
 ### **What the deployment scripts do:**
-- Copy updated files to VM
-- Install Python dependencies
-- Run Django migrations
-- Collect static files
-- Restart Django and Nginx services
-- Test the deployment
+- **Initial deployment**: Clone Git repository, install dependencies, configure services
+- **Updates**: Pull latest changes from Git, run migrations, collect static files, restart services
+- **Git-based**: Only downloads changed files, much faster than copying entire project
 
 ## 🛠️ **Development Setup**
 
