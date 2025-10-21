@@ -24,34 +24,41 @@ This demo site showcases how Cloudflare's security features protect against comm
 
 ## 🏗️ Architecture
 
-**Current Deployment:** Google Cloud Platform VM with Docker Compose
+**Current Deployment:** Google Cloud Platform VM with Traditional Django + Nginx
 - **Web Server:** Nginx (reverse proxy)
-- **Application:** Django 5.2.5 with Gunicorn
+- **Application:** Django 5.2.7 with Gunicorn
 - **Database:** SQLite (for simplicity)
-- **Containerization:** Docker Compose for easy deployment
+- **Process Management:** systemd service
 - **Domain:** appdemo.oskarcode.com
 
 ## 🔧 Development Setup
 
 ### Prerequisites
-- Docker & Docker Compose
+- Python 3.11+
 - Git
 - Google Cloud SDK (for deployment)
 
-### Local Development with Docker
+### Local Development
 ```bash
 # Clone repository
 git clone https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp.git
 cd cloudflare-app-sec-performance-demo-gcp
 
-# Start development environment
-docker-compose up -d --build
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
 
 # Populate database with demo products
-docker-compose exec web python manage.py populate_products
+python manage.py populate_products
 
-# Check status
-docker-compose ps
+# Start development server
+python manage.py runserver
 ```
 
 Visit http://localhost:8000 to see the application.
@@ -86,34 +93,30 @@ python manage.py runserver 0.0.0.0:8000
 #### One-Command Deployment
 ```bash
 # Deploy to production VM
-./deploy-production.sh
+./deploy-traditional.sh
 ```
 
 This script will:
 1. Connect to your GCP VM
-2. Pull latest code from GitHub
-3. Build and start Docker containers
-4. Configure Nginx reverse proxy
-5. Run health checks
-6. Verify deployment
+2. Set up traditional Django + Nginx deployment
+3. Install Python dependencies
+4. Configure systemd service
+5. Set up Nginx reverse proxy
+6. Run health checks
+7. Verify deployment
 
 #### Manual VM Setup (First Time Only)
 ```bash
 # Connect to VM
 gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
 
-# Install Docker and Docker Compose
+# Install system packages
 sudo apt update
-sudo apt install -y docker.io docker-compose-plugin
-sudo systemctl enable docker
-sudo usermod -aG docker $USER
+sudo apt install -y python3 python3-pip python3-venv nginx supervisor
 
-# Clone repository
-git clone https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp.git
-cd cloudflare-app-sec-performance-demo-gcp
-
-# Start application
-docker-compose up -d --build
+# Set up application directory
+sudo mkdir -p /var/www/django-app
+sudo chown oskarablimit:oskarablimit /var/www/django-app
 ```
 
 ### AWS EC2 Deployment (Legacy)
