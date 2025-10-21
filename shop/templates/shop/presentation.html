@@ -140,7 +140,7 @@
                             <p class="mb-1">Sensitive files and API keys exposed to attackers</p>
                             <div class="mt-2">
                                 <small><a href="/.env.backup" class="btn btn-sm btn-outline-danger me-2">Test: /.env.backup</a></small>
-                                <small><a href="/git-secrets/" class="btn btn-sm btn-outline-danger">Test: Git Secrets</a></small>
+                                <small><a href="{% url 'git_secrets' %}" class="btn btn-sm btn-outline-danger">Test: Git Secrets</a></small>
                             </div>
                         </div>
                     </div>
@@ -202,7 +202,7 @@
                                 <strong>Quick Demo Links:</strong>
                                 <div class="mt-1">
                                     <a href="/.env.backup" class="btn btn-sm btn-outline-danger me-2">Test: /.env.backup</a>
-                                    <a href="/git-secrets/" class="btn btn-sm btn-outline-danger">Test: Git Secrets</a>
+                                    <a href="{% url 'git_secrets' %}" class="btn btn-sm btn-outline-danger">Test: Git Secrets</a>
                                 </div>
                             </div>
                         </div>
