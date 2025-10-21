@@ -17,21 +17,13 @@ echo "Zone: $VM_ZONE"
 echo "App Directory: $APP_DIR"
 echo "Repository: $REPO_URL"
 
-# Step 1: Download latest changes from Git repository
-echo "📥 Downloading latest changes from Git repository..."
+# Step 1: Pull latest changes from Git repository
+echo "📥 Pulling latest changes from Git repository..."
 gcloud compute ssh --zone "$VM_ZONE" "$VM_NAME" --project "$PROJECT_ID" --command "
 cd $APP_DIR && \
-# Install unzip if not available
-sudo apt update && sudo apt install -y unzip && \
-# Download latest version as ZIP (no authentication needed for public repos)
-wget -q https://github.com/oskarcode/cloudflare-app-sec-performance-demo-gcp/archive/main.zip -O latest.zip && \
-unzip -o latest.zip && \
-rm latest.zip && \
-# Copy files from extracted directory
-cp -r cloudflare-app-sec-performance-demo-gcp-main/* . && \
-cp -r cloudflare-app-sec-performance-demo-gcp-main/.* . 2>/dev/null || true && \
-rm -rf cloudflare-app-sec-performance-demo-gcp-main && \
-echo '✅ Repository updated successfully'
+git fetch origin && \
+git reset --hard origin/main && \
+echo '✅ Git pull completed successfully'
 "
 
 # Step 2: Run migrations, collect static, and restart Gunicorn
