@@ -2,10 +2,10 @@
 
 ## 🚀 **Quick Start**
 
-Your Django ecommerce application is now running on Google Cloud VM with Docker Compose!
+Your Django ecommerce application is now running on Google Cloud VM with traditional Django + Nginx deployment!
 
-- **Live Application**: http://appdemo.oskarcode.com
-- **Health Check**: http://appdemo.oskarcode.com/health/
+- **Live Application**: https://appdemo.oskarcode.com
+- **Health Check**: https://appdemo.oskarcode.com/health/
 - **VM IP**: http://34.86.12.252
 
 ## 🏗️ **Architecture**
@@ -26,9 +26,9 @@ Your Django ecommerce application is now running on Google Cloud VM with Docker 
 
 ### **Components:**
 - **VM**: `oskar-appdemo-se` in `us-east4-b` zone
-- **Web Container**: Django + Gunicorn (2 workers)
-- **Nginx Container**: Reverse proxy + static file serving
-- **Database**: SQLite (persistent via volume mount)
+- **Web Server**: Django + Gunicorn (2 workers) via systemd
+- **Nginx**: Reverse proxy + static file serving
+- **Database**: SQLite (persistent)
 - **Domain**: `appdemo.oskarcode.com`
 
 ## 🔄 **Git Workflow & Updates**
@@ -42,7 +42,7 @@ Your Django ecommerce application is now running on Google Cloud VM with Docker 
 1. **Make changes locally:**
    ```bash
    # Edit files in your local project
-   # Test locally with: docker-compose up
+   # Test locally with: python manage.py runserver
    ```
 
 2. **Commit and push:**
@@ -54,16 +54,20 @@ Your Django ecommerce application is now running on Google Cloud VM with Docker 
 
 3. **Deploy to production:**
    ```bash
-   ./deploy-production.sh
+   # Use the update script for quick updates
+   ./update-traditional.sh
+   
+   # Or use the full deployment script for fresh setup
+   ./deploy-traditional.sh
    ```
 
-### **What the deployment script does:**
-- Pulls latest code from Git
-- Stops existing containers
-- Builds new Docker images
-- Starts containers with new code
-- Tests the deployment
-- Reports success/failure
+### **What the deployment scripts do:**
+- Copy updated files to VM
+- Install Python dependencies
+- Run Django migrations
+- Collect static files
+- Restart Django and Nginx services
+- Test the deployment
 
 ## 🛠️ **Development Setup**
 
@@ -77,12 +81,25 @@ Your Django ecommerce application is now running on Google Cloud VM with Docker 
 
 2. **Start local development:**
    ```bash
-   docker-compose up --build
+   # Create virtual environment
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   
+   # Run migrations
+   python manage.py migrate
+   
+   # Populate with sample data
+   python manage.py populate_products
+   
+   # Start development server
+   python manage.py runserver
    ```
 
 3. **Access locally:**
    - Application: http://localhost:8000
-   - Through Nginx: http://localhost
 
 ### **Environment Variables:**
 

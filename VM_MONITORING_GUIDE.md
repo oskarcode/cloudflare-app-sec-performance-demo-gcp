@@ -10,117 +10,95 @@ gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-19
 ### **Key Directory Locations:**
 ```bash
 # Project directory
-cd ~/cloudflare-demo-ecommerce
+cd /var/www/django-app
 
 # System directories
 /etc/nginx/                    # Nginx configuration
 /var/log/nginx/                # Nginx logs
-/var/lib/docker/               # Docker data
+/etc/systemd/system/           # Systemd services
 /home/oskarablimit/            # User home directory
 ```
 
-## 🐳 **Docker Container Management**
+## 🐍 **Django Application Management**
 
-### **Check Container Status:**
+### **Check Django Service Status:**
 ```bash
-# All containers
-docker ps -a
+# Django service status
+sudo systemctl status django-app
 
-# Running containers only
-docker ps
+# Django service logs
+sudo journalctl -u django-app -f
 
-# Container details
-docker inspect <container_name>
-
-# Container resource usage
-docker stats
+# Restart Django service
+sudo systemctl restart django-app
 ```
 
-### **Container Logs:**
+### **Check Nginx Status:**
 ```bash
-# All logs
-docker-compose logs
+# Nginx service status
+sudo systemctl status nginx
 
-# Specific service logs
-docker-compose logs web
-docker-compose logs nginx
+# Nginx configuration test
+sudo nginx -t
 
-# Follow logs in real-time
-docker-compose logs -f web
+# Nginx logs
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
 
-# Last 50 lines
-docker-compose logs --tail 50 web
+# Restart Nginx
+sudo systemctl restart nginx
 ```
 
-### **Container Management:**
+### **Check Application Logs:**
 ```bash
-# Start containers
-docker-compose up -d
+# Django application logs
+sudo journalctl -u django-app --no-pager -n 50
 
-# Stop containers
-docker-compose down
+# Nginx access logs
+sudo tail -f /var/log/nginx/access.log
 
-# Restart specific service
-docker-compose restart web
-
-# Rebuild and start
-docker-compose up -d --build
-
-# Execute commands inside container
-docker-compose exec web bash
-docker-compose exec nginx sh
+# Nginx error logs
+sudo tail -f /var/log/nginx/error.log
 ```
 
 ## 🌐 **Nginx Web Server**
 
 ### **Check Nginx Status:**
 ```bash
-# Check if nginx container is running
-docker-compose ps nginx
+# Check if nginx is running
+sudo systemctl status nginx
 
 # Check nginx configuration
-docker-compose exec nginx nginx -t
+sudo nginx -t
 
 # Reload nginx configuration
-docker-compose exec nginx nginx -s reload
-
-# Check nginx processes
-docker-compose exec nginx ps aux
+sudo systemctl reload nginx
 ```
 
-### **Nginx Logs:**
+### **Nginx Configuration:**
 ```bash
-# Access logs
-docker-compose exec nginx tail -f /var/log/nginx/access.log
+# Main configuration file
+sudo nano /etc/nginx/nginx.conf
 
-# Error logs
-docker-compose exec nginx tail -f /var/log/nginx/error.log
+# Test configuration
+sudo nginx -t
 
-# All nginx logs
-docker-compose logs nginx
-```
-
-### **Test Nginx Configuration:**
-```bash
-# Test configuration syntax
-docker-compose exec nginx nginx -t
-
-# Check loaded modules
-docker-compose exec nginx nginx -V
+# Restart nginx
+sudo systemctl restart nginx
 ```
 
 ## 🐍 **Django Application**
 
 ### **Check Django Status:**
 ```bash
-# Check if web container is running
-docker-compose ps web
+# Check if Django service is running
+sudo systemctl status django-app
 
 # Check Django processes
-docker-compose exec web ps aux
+ps aux | grep gunicorn
 
 # Check Django logs
-docker-compose logs web
+sudo journalctl -u django-app --no-pager -n 50
 
 # Check Django health endpoint
 curl http://localhost:8000/health/
@@ -128,329 +106,248 @@ curl http://localhost:8000/health/
 
 ### **Django Management Commands:**
 ```bash
-# Run Django shell
-docker-compose exec web python manage.py shell
+# Navigate to project directory
+cd /var/www/django-app
 
-# Check Django configuration
-docker-compose exec web python manage.py check
+# Activate virtual environment
+source venv/bin/activate
 
-# Run migrations
-docker-compose exec web python manage.py migrate
+# Run Django commands
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py populate_products
 
-# Collect static files
-docker-compose exec web python manage.py collectstatic
+# Check Django shell
+python manage.py shell
 
 # Create superuser
-docker-compose exec web python manage.py createsuperuser
-
-# Check database
-docker-compose exec web python manage.py dbshell
+python manage.py createsuperuser
 ```
 
-### **Django Debugging:**
-```bash
-# Check Django settings
-docker-compose exec web python -c "from django.conf import settings; print(settings.DEBUG)"
-
-# Check database connection
-docker-compose exec web python -c "from django.db import connection; connection.ensure_connection()"
-
-# Check installed apps
-docker-compose exec web python -c "from django.conf import settings; print(settings.INSTALLED_APPS)"
-```
-
-## 🗄️ **Database Management**
+## 💾 **Database Management**
 
 ### **SQLite Database:**
 ```bash
+# Navigate to project directory
+cd /var/www/django-app
+
 # Check database file
-ls -la ~/cloudflare-demo-ecommerce/db.sqlite3
-
-# Check database permissions
-ls -la ~/cloudflare-demo-ecommerce/db.sqlite3
-
-# Database file size
-du -h ~/cloudflare-demo-ecommerce/db.sqlite3
+ls -la db.sqlite3
 
 # Backup database
-cp ~/cloudflare-demo-ecommerce/db.sqlite3 ~/backup-$(date +%Y%m%d).sqlite3
+cp db.sqlite3 db.sqlite3.backup.$(date +%Y%m%d_%H%M%S)
+
+# Check database integrity
+sqlite3 db.sqlite3 "PRAGMA integrity_check;"
+
+# View database schema
+sqlite3 db.sqlite3 ".schema"
 ```
 
 ### **Database Operations:**
 ```bash
-# Connect to database
-docker-compose exec web python manage.py dbshell
+# Run migrations
+cd /var/www/django-app
+source venv/bin/activate
+python manage.py migrate
 
-# Check database tables
-docker-compose exec web python manage.py showmigrations
+# Create migrations
+python manage.py makemigrations
 
-# Run specific migration
-docker-compose exec web python manage.py migrate shop 0001
-
-# Check database integrity
-docker-compose exec web python -c "import sqlite3; conn = sqlite3.connect('/app/db.sqlite3'); conn.execute('PRAGMA integrity_check'); print('Database OK')"
+# Show migration status
+python manage.py showmigrations
 ```
 
-## 📊 **System Monitoring**
+## 🔧 **System Monitoring**
 
 ### **System Resources:**
 ```bash
-# CPU and memory usage
+# Check system resources
+htop
+# or
 top
-htop  # if available
 
-# Disk usage
-df -h
-du -sh ~/cloudflare-demo-ecommerce/*
-
-# Memory usage
+# Check memory usage
 free -h
 
-# Network connections
-netstat -tulpn
-ss -tulpn
-```
+# Check disk usage
+df -h
 
-### **Docker System Info:**
-```bash
-# Docker system information
-docker system info
-
-# Docker disk usage
-docker system df
-
-# Clean up unused resources
-docker system prune
-
-# Check Docker logs
-journalctl -u docker.service
+# Check disk usage by directory
+du -sh /var/www/django-app/*
 ```
 
 ### **Process Monitoring:**
 ```bash
-# All processes
-ps aux
+# Check running processes
+ps aux | grep -E "(nginx|gunicorn|python)"
 
-# Docker processes
-ps aux | grep docker
+# Check systemd services
+systemctl list-units --type=service --state=running
 
-# Nginx processes
-ps aux | grep nginx
-
-# Python/Django processes
-ps aux | grep python
+# Check service status
+sudo systemctl status django-app nginx
 ```
 
-## 🔧 **File System Navigation**
+## 🚨 **Troubleshooting**
 
-### **Project Structure:**
+### **Common Issues:**
+
+#### **Django Service Not Starting:**
 ```bash
-# Navigate to project
-cd ~/cloudflare-demo-ecommerce
+# Check service status
+sudo systemctl status django-app
 
-# List all files
-ls -la
+# Check logs
+sudo journalctl -u django-app --no-pager -n 50
 
-# Check file permissions
-ls -la db.sqlite3
-ls -la docker-compose.yml
-
-# Check directory ownership
-ls -la | head -10
+# Check configuration
+cd /var/www/django-app
+source venv/bin/activate
+python manage.py check
 ```
 
-### **Configuration Files:**
-```bash
-# Docker Compose configuration
-cat docker-compose.yml
-
-# Nginx configuration
-cat nginx.conf
-
-# Django settings
-cat cloudflare_demo_ecommerce/settings.py
-
-# Environment variables
-cat env.production
-```
-
-### **Log Files:**
-```bash
-# Application logs
-tail -f ~/cloudflare-demo-ecommerce/django.log
-
-# System logs
-tail -f /var/log/syslog
-
-# Docker logs
-journalctl -u docker.service -f
-```
-
-## 🚨 **Troubleshooting Commands**
-
-### **Application Not Responding:**
-```bash
-# Check container status
-docker-compose ps
-
-# Check logs for errors
-docker-compose logs web | tail -20
-
-# Restart containers
-docker-compose restart
-
-# Check port binding
-netstat -tulpn | grep :8000
-netstat -tulpn | grep :80
-```
-
-### **Database Issues:**
-```bash
-# Check database file
-ls -la db.sqlite3
-
-# Fix permissions
-sudo chown -R 1000:1000 ~/cloudflare-demo-ecommerce/
-
-# Check database integrity
-docker-compose exec web python manage.py check --database default
-```
-
-### **Nginx Issues:**
+#### **Nginx Not Starting:**
 ```bash
 # Check nginx status
-docker-compose ps nginx
+sudo systemctl status nginx
 
-# Test nginx config
-docker-compose exec nginx nginx -t
+# Test configuration
+sudo nginx -t
 
-# Check nginx logs
-docker-compose logs nginx
-
-# Restart nginx
-docker-compose restart nginx
+# Check logs
+sudo tail -f /var/log/nginx/error.log
 ```
 
-### **Permission Issues:**
+#### **Database Issues:**
 ```bash
-# Check file ownership
-ls -la ~/cloudflare-demo-ecommerce/
+# Check database file permissions
+ls -la /var/www/django-app/db.sqlite3
 
-# Fix ownership
-sudo chown -R 1000:1000 ~/cloudflare-demo-ecommerce/
+# Fix permissions if needed
+sudo chown oskarablimit:oskarablimit /var/www/django-app/db.sqlite3
 
-# Check user in container
-docker-compose exec web whoami
-docker-compose exec web id
+# Check database integrity
+cd /var/www/django-app
+sqlite3 db.sqlite3 "PRAGMA integrity_check;"
 ```
 
-## 📈 **Performance Monitoring**
-
-### **Container Performance:**
+#### **Static Files Not Loading:**
 ```bash
-# Real-time container stats
-docker stats
+# Check static files directory
+ls -la /var/www/django-app/staticfiles/
 
-# Container resource usage
-docker-compose exec web top
-docker-compose exec nginx top
+# Collect static files
+cd /var/www/django-app
+source venv/bin/activate
+python manage.py collectstatic --noinput
+
+# Check nginx static file configuration
+sudo nginx -t
 ```
 
-### **Application Performance:**
+### **Performance Monitoring:**
 ```bash
 # Check response times
-curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8000/
+curl -w "@curl-format.txt" -o /dev/null -s https://appdemo.oskarcode.com/
 
-# Monitor logs for slow queries
-docker-compose logs web | grep -i "slow"
+# Monitor real-time logs
+sudo tail -f /var/log/nginx/access.log | grep -E "(GET|POST)"
 
-# Check Django debug info
-docker-compose exec web python manage.py check --deploy
+# Check active connections
+sudo netstat -tulpn | grep :80
+sudo netstat -tulpn | grep :8000
 ```
 
-## 🔍 **Debugging Commands**
+## 🔄 **Service Management**
 
-### **Network Debugging:**
+### **Start/Stop Services:**
 ```bash
-# Test local connectivity
+# Start services
+sudo systemctl start django-app
+sudo systemctl start nginx
+
+# Stop services
+sudo systemctl stop django-app
+sudo systemctl stop nginx
+
+# Restart services
+sudo systemctl restart django-app
+sudo systemctl restart nginx
+
+# Enable services (start on boot)
+sudo systemctl enable django-app
+sudo systemctl enable nginx
+```
+
+### **Service Configuration:**
+```bash
+# Edit Django service
+sudo systemctl edit django-app
+
+# Edit Nginx configuration
+sudo nano /etc/nginx/nginx.conf
+
+# Reload configurations
+sudo systemctl daemon-reload
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## 📊 **Health Checks**
+
+### **Application Health:**
+```bash
+# Django health endpoint
 curl http://localhost:8000/health/
-curl http://localhost/health/
 
-# Check external connectivity
-curl http://34.86.12.252/health/
+# External health check
+curl https://appdemo.oskarcode.com/health/
 
-# Test DNS resolution
-nslookup appdemo.oskarcode.com
+# Check all endpoints
+curl -I https://appdemo.oskarcode.com/
+curl -I https://appdemo.oskarcode.com/presentation/
+curl -I https://appdemo.oskarcode.com/search/
 ```
 
-### **Container Debugging:**
+### **System Health:**
 ```bash
-# Enter container shell
-docker-compose exec web bash
-docker-compose exec nginx sh
-
-# Check container environment
-docker-compose exec web env
-
-# Check container network
-docker-compose exec web netstat -tulpn
-```
-
-### **Application Debugging:**
-```bash
-# Django debug mode
-docker-compose exec web python manage.py shell
-
-# Check Django configuration
-docker-compose exec web python -c "import django; django.setup(); from django.conf import settings; print(settings.ALLOWED_HOSTS)"
-
-# Test database connection
-docker-compose exec web python -c "from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT 1'); print('DB OK')"
-```
-
-## 📋 **Quick Reference Commands**
-
-### **Essential Commands:**
-```bash
-# Check everything at once
-docker-compose ps && echo "=== LOGS ===" && docker-compose logs --tail 10
-
-# Quick health check
-curl http://localhost:8000/health/ && curl http://localhost/health/
-
-# Restart everything
-docker-compose down && docker-compose up -d
-
-# Check disk space
-df -h && du -sh ~/cloudflare-demo-ecommerce/*
+# Check all services
+sudo systemctl status django-app nginx
 
 # Check system resources
-free -h && top -bn1 | head -5
-```
-
-### **Emergency Commands:**
-```bash
-# Stop everything
-docker-compose down
-
-# Start everything
-docker-compose up -d
-
-# Rebuild everything
-docker-compose down && docker-compose up -d --build
+htop
 
 # Check logs for errors
-docker-compose logs | grep -i error
+sudo journalctl --since "1 hour ago" --priority=err
 ```
 
----
+## 🛠️ **Quick Fixes**
 
-**Pro Tip**: Create aliases for frequently used commands:
+### **Restart Everything:**
 ```bash
-# Add to ~/.bashrc
-alias dcl='docker-compose logs'
-alias dcp='docker-compose ps'
-alias dcu='docker-compose up -d'
-alias dcd='docker-compose down'
-alias dcr='docker-compose restart'
+sudo systemctl restart django-app nginx
 ```
+
+### **Update Application:**
+```bash
+cd /var/www/django-app
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py collectstatic --noinput
+sudo systemctl restart django-app
+```
+
+### **Check Everything:**
+```bash
+# Service status
+sudo systemctl status django-app nginx
+
+# Configuration test
+sudo nginx -t
+
+# Health check
+curl https://appdemo.oskarcode.com/health/
+```
+
+This guide covers all the essential monitoring and troubleshooting commands for your traditional Django + Nginx deployment!

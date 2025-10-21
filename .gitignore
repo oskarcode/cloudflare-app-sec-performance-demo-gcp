@@ -139,8 +139,9 @@ dmypy.json
 .DS_Store
 Thumbs.db
 
-# Docker
+# Traditional deployment
 *.tar.gz
+deploy-backup-*
 
 # Media files (keep structure but not content)
 media/*
@@ -155,3 +156,7 @@ staticfiles/
 .env.development
 .env.production
 env.production
+
+# AWS keys (security)
+*.pem
+*.key

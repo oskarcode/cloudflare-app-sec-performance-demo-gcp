@@ -15,31 +15,27 @@ echo "VM: $VM_NAME"
 echo "Zone: $VM_ZONE"
 echo "App Directory: $APP_DIR"
 
-# Update on VM
-echo "📥 Updating Django application on VM..."
+# Step 1: Copy updated project files to VM
+echo "📤 Copying updated project files to VM..."
+gcloud compute scp --zone "$VM_ZONE" --project "$PROJECT_ID" --recurse \
+    . "$VM_NAME:$APP_DIR"
+
+# Step 2: Run migrations, collect static, and restart Gunicorn
+echo "🐍 Updating Python environment and Django..."
 gcloud compute ssh --zone "$VM_ZONE" "$VM_NAME" --project "$PROJECT_ID" --command "
-cd $APP_DIR
+cd $APP_DIR && \
+source venv/bin/activate && \
+pip install -r requirements.txt && \
+python manage.py migrate && \
+python manage.py collectstatic --noinput && \
+sudo systemctl restart django-app
+"
 
-# Stop the service
-sudo systemctl stop django-app
-
-# Update Python dependencies (if requirements.txt changed)
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run Django migrations
-python manage.py migrate
-
-# Collect static files
-python manage.py collectstatic --noinput
-
-# Restart the service
-sudo systemctl start django-app
-
-# Check status
-sudo systemctl status django-app --no-pager
-
-echo '✅ Django application updated successfully!'
+# Step 3: Restart Nginx to ensure new static files are served
+echo "🌐 Restarting Nginx..."
+gcloud compute ssh --zone "$VM_ZONE" "$VM_NAME" --project "$PROJECT_ID" --command "
+sudo nginx -t && \
+sudo systemctl restart nginx
 "
 
 echo "🎉 Update completed!"

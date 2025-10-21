@@ -9,15 +9,15 @@ sequenceDiagram
     participant B as Browser
     participant CF as Cloudflare Edge (WAF/CDN)
     participant VM as GCP VM (Origin)
-    participant N as Nginx (container)
-    participant W as Web (Gunicorn+Django)
+    participant N as Nginx (systemd)
+    participant W as Django+Gunicorn (systemd)
     participant DB as SQLite
 
     B->>CF: 1. HTTPS request (TLS at Cloudflare)
     CF-->>B: 2. Apply WAF/CDN, send response or forward
     CF->>N: 3. HTTP request to origin (X-Forwarded-*, CF-Connecting-IP)
-    Note over VM: Port 80 open; Docker network routes to Nginx
-    N->>W: 4. Proxy to upstream web:8000 (Gunicorn)
+    Note over VM: Port 80 open; Nginx routes to Gunicorn
+    N->>W: 4. Proxy to 127.0.0.1:8000 (Gunicorn)
     W->>DB: 5. ORM query (SQLite file)
     DB-->>W: 6. Result rows
     W-->>N: 7. Django response
@@ -30,113 +30,90 @@ sequenceDiagram
 Browser ──TLS──> Cloudflare (DNS/WAF/CDN) ──HTTP──> Origin IP
                                           │
                                           ▼
-                                  [Docker Host: GCP VM]
+                                  [GCP VM: Traditional Deployment]
                                           │
-                                          ├─ container: nginx (ports: 80,443)
-                                          │      │ proxy_pass http://web:8000
+                                          ├─ Nginx (systemd service, port 80)
+                                          │      │ proxy_pass http://127.0.0.1:8000
                                           │      ▼
-                                          └─ container: web (Gunicorn+Django)
+                                          └─ Django+Gunicorn (systemd service)
                                                  │ ORM
                                                  ▼
-                                              SQLite (host bind mount)
+                                              SQLite (local file)
 ```
 
 ---
 
-## Docker and Container Architecture
+## Traditional Deployment Architecture
 
-### Docker Topology (Mermaid)
+### Service Topology (Mermaid)
 ```mermaid
 flowchart LR
-    subgraph GCP_VM[Docker Host: GCP VM]
-        subgraph net[Compose Bridge Network]
-            Nginx[nginx:alpine\nports: 80,443\nmount: nginx.conf] -->|proxy_pass http://web:8000| Web[web (Gunicorn+Django)\nport: 8000]
+    subgraph VM["GCP VM (oskar-appdemo-se)"]
+        subgraph Services["Systemd Services"]
+            N["Nginx<br/>(port 80)"]
+            D["Django+Gunicorn<br/>(port 8000)"]
         end
-        StaticVol[(static_volume\n/var/www/static)]
-        MediaVol[(media_volume\n/var/www/media)]
-        DB[(db.sqlite3\nHost bind mount)]
+        subgraph Files["File System"]
+            SF["Static Files<br/>(/var/www/django-app/staticfiles)"]
+            DB["SQLite DB<br/>(/var/www/django-app/db.sqlite3)"]
+        end
     end
-
-    CF[Cloudflare Edge] -->|HTTP 80| Nginx
-    Web -->|collectstatic| StaticVol
-    Web -->|media writes| MediaVol
-    Web -->|ORM| DB
+    
+    CF["Cloudflare Edge"] --> VM
+    N --> D
+    D --> DB
+    N --> SF
 ```
-
 #### Node Test Callouts
 - Browser/Client:
   - `curl -Iv https://appdemo.oskarcode.com/`
 - Cloudflare DNS/Edge:
   - `dig +short appdemo.oskarcode.com`
   - Check `cf-ray` in response headers
-- Nginx container (origin entry):
-  - `curl -I http://ORIGIN_IP/health/`
-  - `docker-compose exec -T nginx nginx -t`
-- Nginx → Web upstream:
-  - `docker-compose exec -T nginx wget -S -O- http://web:8000/health/`
-- Web (Gunicorn+Django):
-  - `docker-compose exec -T web curl -I http://localhost:8000/health/`
-  - `docker-compose exec -T web curl -I http://localhost:8000/.env.backup/`
-- SQLite persistence/permissions:
-  - `ls -la db.sqlite3`
-  - `sudo chown -R 1000:1000 /home/oskar/cloudflare-demo-ecommerce`
+- Nginx service (origin entry):
+  - `curl -I http://34.86.12.252/health/`
+  - `sudo nginx -t`
+- Nginx → Django upstream:
+  - `curl -I http://127.0.0.1:8000/health/`
+- Django+Gunicorn service:
+  - `curl -I http://localhost:8000/health/`
+  - `sudo systemctl status django-app`
+- SQLite database:
+  - `ls -la /var/www/django-app/db.sqlite3`
+  - `sudo chown oskarablimit:oskarablimit /var/www/django-app/db.sqlite3`
 
-### Docker Topology (Mermaid)
-```mermaid
-flowchart LR
-  subgraph GCP_VM[Docker Host: GCP VM]
-    subgraph net[Docker Bridge Network]
-      NGINX[nginx:alpine\nports: 80,443\nmounts: nginx.conf, static/media]
-      WEB[web (Gunicorn+Django)\nport: 8000\nuser: appuser (UID 1000)]
-      NGINX ---|proxy_pass http://web:8000| WEB
-    end
-    DB[(db.sqlite3)\nhost bind mount]
-    WEB ---|ORM file I/O| DB
-  end
+### Service Configuration
+- **nginx**: Reverse proxy serving `/static/` and forwarding dynamic requests to `127.0.0.1:8000`.
+- **django-app**: Gunicorn app server running Django, listening on port 8000 via systemd.
 
-  CF[Cloudflare Edge\nDNS/WAF/CDN/TLS] -->|HTTP| NGINX
-```
+Defined in systemd services:
+- `/etc/systemd/system/django-app.service` → Django+Gunicorn service
+- `/etc/nginx/nginx.conf` → Nginx configuration
 
-### Compose Services
-- **nginx**: Reverse proxy serving `/static/` and forwarding dynamic requests to `web:8000`.
-- **web**: Gunicorn app server running Django, listening on port 8000.
+### File System Layout
+- Application files: `/var/www/django-app/`
+- Static files: `/var/www/django-app/staticfiles/`
+- Database: `/var/www/django-app/db.sqlite3`
+- Virtual environment: `/var/www/django-app/venv/`
 
-Defined in `docker-compose.yml` with volumes for static and media:
-- `static_volume` → mounted by nginx at `/var/www/static`
-- `media_volume` → mounted by nginx at `/var/www/media`
-
-### Networks
-- Both containers are on the default Compose bridge network.
-- Service DNS names (e.g., `web`) resolve within the network.
-- Nginx upstream uses `proxy_pass http://django;` where `django` upstream points to `web:8000` in `nginx.conf`.
-
-### Volumes and Persistence
-- Static files are collected to `/app/staticfiles` (web) → mapped to `static_volume` → exposed to nginx at `/var/www/static`.
-- Media files similarly flow via `media_volume`.
-- SQLite database file `db.sqlite3` lives on the host bind mount in the project directory. Permissions must match container user UID 1000 (`appuser`).
-
-### Images and Build
-- `web` is built from the repository `Dockerfile` (Python 3.11 slim), installs dependencies, creates `appuser`, and runs Gunicorn.
-- `nginx` uses the `nginx:alpine` image and mounts `nginx.conf` from the repo.
-
-### Container Lifecycle
-- Start: `docker-compose up -d --build`
-- Stop: `docker-compose down`
-- Status: `docker-compose ps`
-- Logs: `docker-compose logs nginx` and `docker-compose logs web`
+### Service Management
+- Start: `sudo systemctl start django-app nginx`
+- Stop: `sudo systemctl stop django-app nginx`
+- Status: `sudo systemctl status django-app nginx`
+- Logs: `sudo journalctl -u django-app` and `sudo tail -f /var/log/nginx/access.log`
 - Health:
   - App: `curl -I http://localhost/health/` (nginx)
-  - Inside web: `docker-compose exec -T web curl -I http://localhost:8000/health/`
+  - Direct: `curl -I http://localhost:8000/health/` (Django)
 
-### Docker-Focused Troubleshooting
-- **Port conflicts**: `sudo ss -lntp | grep ':80\|:443\|:8000'`
+### Traditional Deployment Troubleshooting
+- **Port conflicts**: `sudo ss -lntp | grep ':80\|:8000'`
 - **Permissions (SQLite)**:
-  - Ensure ownership: `sudo chown -R 1000:1000 /home/oskar/cloudflare-demo-ecommerce`
-  - Validate writes: `docker-compose exec -T web python manage.py migrate --check`
+  - Ensure ownership: `sudo chown oskarablimit:oskarablimit /var/www/django-app/db.sqlite3`
+  - Validate writes: `cd /var/www/django-app && source venv/bin/activate && python manage.py migrate --check`
 - **Network reachability**:
-  - From nginx to web: `docker-compose exec -T nginx wget -S -O- http://web:8000/health/`
-- **Rebuild after config changes**: `docker-compose up -d --build`
-- **Environment verification**: `docker-compose exec -T web env | sort | grep -E 'DEBUG|ALLOWED_HOSTS|SECRET_KEY'`
+  - From nginx to Django: `curl -I http://127.0.0.1:8000/health/`
+- **Restart after config changes**: `sudo systemctl restart django-app nginx`
+- **Environment verification**: `cd /var/www/django-app && source venv/bin/activate && env | sort | grep -E 'DEBUG|ALLOWED_HOSTS|SECRET_KEY'`
 
 ---
 
