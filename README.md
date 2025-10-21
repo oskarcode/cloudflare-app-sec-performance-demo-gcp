@@ -87,8 +87,28 @@ python manage.py runserver 0.0.0.0:8000
 
 #### Prerequisites
 - Google Cloud SDK installed locally
-- Access to GCP project: `globalse-198312`
-- VM: `oskar-appdemo-se` in zone `us-east4-b`
+- Access to GCP project: `[PROJECT_ID_MASKED]`
+- VM: `[VM_NAME_MASKED]` in zone `[ZONE_MASKED]`
+
+#### Configuration Setup
+Before deployment, you need to configure your GCP credentials:
+
+```bash
+# Copy the credentials template
+cp credentials.env credentials.local.env
+
+# Edit credentials.local.env with your actual values:
+# - GCP_PROJECT_ID=your-project-id
+# - GCP_VM_NAME=your-vm-name  
+# - GCP_VM_ZONE=your-vm-zone
+# - GCP_VM_IP=your-vm-ip
+# - APP_DOMAIN=your-domain.com
+
+# Source the credentials (optional, for manual commands)
+source credentials.local.env
+```
+
+**Note:** The `credentials.env` file contains a template with masked values. Create `credentials.local.env` with your actual GCP VM information for deployment.
 
 #### One-Command Deployment
 ```bash
@@ -108,7 +128,7 @@ This script will:
 #### Manual VM Setup (First Time Only)
 ```bash
 # Connect to VM
-gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
+gcloud compute ssh --zone "[ZONE_MASKED]" "[VM_NAME_MASKED]" --project "[PROJECT_ID_MASKED]"
 
 # Install system packages
 sudo apt update
@@ -228,9 +248,9 @@ git push origin main
 ## ☁️ Cloudflare Configuration
 
 ### DNS Setup
-1. **Add A Record:** `appdemo.oskarcode.com` → `34.86.12.252` (GCP VM IP)
+1. **Add A Record:** `appdemo.oskarcode.com` → `[VM_IP_MASKED]` (GCP VM IP)
 2. **Enable Proxy:** Orange cloud the DNS record
-3. **Add WWW Record:** `www.appdemo.oskarcode.com` → `34.86.12.252`
+3. **Add WWW Record:** `www.appdemo.oskarcode.com` → `[VM_IP_MASKED]`
 
 ### SSL/TLS Configuration
 1. **SSL Mode:** Set to "Full" or "Full (Strict)" 
@@ -394,7 +414,7 @@ docker-compose restart web
 ### VM Monitoring
 ```bash
 # Connect to VM
-gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
+gcloud compute ssh --zone "[ZONE_MASKED]" "[VM_NAME_MASKED]" --project "[PROJECT_ID_MASKED]"
 
 # Check system resources
 free -h
@@ -453,7 +473,7 @@ docker-compose exec web python manage.py migrate
 ### Monitoring Setup
 ```bash
 # Connect to VM for monitoring
-gcloud compute ssh --zone "us-east4-b" "oskar-appdemo-se" --project "globalse-198312"
+gcloud compute ssh --zone "[ZONE_MASKED]" "[VM_NAME_MASKED]" --project "[PROJECT_ID_MASKED]"
 
 # Check application health
 curl http://localhost:8000/health/

@@ -160,3 +160,8 @@ env.production
 # AWS keys (security)
 *.pem
 *.key
+
+# Credentials and sensitive configuration
+credentials.env
+credentials.local.env
+*.credentials
