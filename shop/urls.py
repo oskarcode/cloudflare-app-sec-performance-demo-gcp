@@ -14,7 +14,7 @@ urlpatterns = [
     path('api/login-test/', views.api_login_test, name='api_login_test'),
     path('presentation/', views.presentation, name='presentation'),
     path('flash-sale/', views.flash_sale, name='flash_sale'),
-    path('git-secrets/', views.git_secrets, name='git_secrets'),
+    path('.git/secrets.txt', views.git_secrets, name='git_secrets'),
     path('.env.backup/', views.env_backup, name='env_backup'),
     path('health/', views.health_check, name='health_check'),
 ]
