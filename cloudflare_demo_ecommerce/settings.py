@@ -33,7 +33,7 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-demo-key-for-development-only-change-in-production')
 
 # Parse ALLOWED_HOSTS from environment variable or use default
-ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0','lb.appdemo.oskarcode.com')
+ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,lb.appdemo.oskarcode.com')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',') if host.strip()]
 
 # Add Cloud Run domain if running on GCP
