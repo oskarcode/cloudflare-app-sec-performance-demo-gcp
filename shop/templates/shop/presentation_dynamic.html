@@ -45,26 +45,6 @@
         background-color: #ea580c;
         border-color: #ea580c;
     }
-    .ai-assistant-btn {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 15px 25px;
-        font-size: 16px;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
-        cursor: pointer;
-        z-index: 1000;
-        transition: all 0.3s ease;
-    }
-    .ai-assistant-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
-    }
 </style>
 
 <!-- Hero Section -->
@@ -395,19 +375,7 @@
     </div>
 </div>
 
-<!-- AI Assistant Button -->
-<button class="ai-assistant-btn" id="ai-assistant-btn">
-    <i class="fas fa-robot"></i> AI Assistant
-</button>
-
-<!-- AI Chat Widget -->
-{% include 'shop/includes/ai_chat_widget.html' %}
-
 <script>
-// Placeholder for AI assistant - will be replaced with MCP Connector
-document.getElementById('ai-assistant-btn').addEventListener('click', function() {
-    alert('AI Assistant coming soon! This will allow you to edit presentation content via natural language.');
-});
 
 // Auto-advance demo sections (optional)
 document.addEventListener('DOMContentLoaded', function() {
