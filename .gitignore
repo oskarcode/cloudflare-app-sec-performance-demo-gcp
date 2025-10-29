@@ -164,4 +164,5 @@ env.production
 # Credentials and sensitive configuration
 credentials.env
 credentials.local.env
-*.credentials
+*.credentialsnode_modules/
+package-lock.json

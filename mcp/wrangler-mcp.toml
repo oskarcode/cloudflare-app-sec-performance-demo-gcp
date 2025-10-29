@@ -2,8 +2,8 @@
 # MCP Server for Presentation Content Management
 
 name = "presentation-mcp-server"
-main = "presentation-mcp-server.js"
-compatibility_date = "2024-08-01"
+main = "./presentation-mcp-server.ts"
+compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Account and Zone Configuration
@@ -21,6 +21,11 @@ route = { pattern = "appdemo.oskarcode.com/mcp/*", zone_id = "f975338ef7c3fbe41c
 [vars]
 DJANGO_API_URL = "https://appdemo.oskarcode.com"
 MCP_VERSION = "2024-11-05"
+
+# MCP Agent Bindings
+[[agents]]
+binding = "MCP_OBJECT"
+type = "mcp"
 
 # Limits and Configuration
 [limits]

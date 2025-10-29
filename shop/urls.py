@@ -22,7 +22,4 @@ urlpatterns = [
     path('api/presentation/sections/', views.api_presentation_sections, name='api_presentation_sections'),
     path('api/presentation/sections/<str:section_type>/', views.api_presentation_section, name='api_presentation_section'),
     path('api/presentation/sections/<str:section_type>/update/', views.api_presentation_section_update, name='api_presentation_section_update'),
-    
-    # AI Chat endpoint
-    path('api/ai-chat/', views.ai_chat, name='ai_chat'),
 ]
