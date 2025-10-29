@@ -1,0 +1,122 @@
+<!-- AI Chat Widget Styles -->
+<style>
+.ai-chat-widget { position: fixed; bottom: 90px; right: 30px; width: 400px; max-width: calc(100vw - 60px); background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); display: none; flex-direction: column; z-index: 1001; max-height: 600px; }
+.ai-chat-widget.open { display: flex; }
+.ai-chat-header { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; padding: 16px 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+.ai-chat-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.ai-chat-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1; opacity: 0.8; }
+.ai-chat-close:hover { opacity: 1; }
+.ai-chat-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa; max-height: 400px; }
+.ai-chat-message { margin-bottom: 16px; display: flex; gap: 10px; }
+.ai-chat-message.user { flex-direction: row-reverse; }
+.ai-chat-message-content { max-width: 75%; padding: 12px 16px; border-radius: 12px; line-height: 1.5; font-size: 14px; }
+.ai-chat-message.user .ai-chat-message-content { background: #f97316; color: white; }
+.ai-chat-message.assistant .ai-chat-message-content { background: white; color: #333; border: 1px solid #e5e7eb; }
+.ai-chat-input-container { padding: 16px; border-top: 1px solid #e5e7eb; background: white; border-radius: 0 0 12px 12px; }
+.ai-chat-input-form { display: flex; gap: 8px; }
+.ai-chat-input { flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+.ai-chat-send { background: #f97316; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+.ai-chat-send:disabled { background: #d1d5db; cursor: not-allowed; }
+</style>
+
+<!-- Chat Widget HTML -->
+<div class="ai-chat-widget" id="ai-chat-widget">
+    <div class="ai-chat-header">
+        <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+        <button class="ai-chat-close" id="ai-chat-close">&times;</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
+        <div style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 40px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">🤖</div>
+            <p><strong>Hi! I'm your AI assistant.</strong></p>
+            <p>I can help you view and edit presentation content.</p>
+        </div>
+    </div>
+    <div class="ai-chat-input-container">
+        <form class="ai-chat-input-form" id="ai-chat-form">
+            <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="Ask me to view or edit content..." autocomplete="off"/>
+            <button type="submit" class="ai-chat-send" id="ai-chat-send">Send</button>
+        </form>
+    </div>
+</div>
+
+<!-- Chat Widget JavaScript -->
+<script>
+(function() {
+    const widget = document.getElementById('ai-chat-widget');
+    const openBtn = document.getElementById('ai-assistant-btn');
+    const closeBtn = document.getElementById('ai-chat-close');
+    const messages = document.getElementById('ai-chat-messages');
+    const form = document.getElementById('ai-chat-form');
+    const input = document.getElementById('ai-chat-input');
+    const sendBtn = document.getElementById('ai-chat-send');
+    let history = [];
+    let processing = false;
+    
+    openBtn.addEventListener('click', () => {
+        widget.classList.toggle('open');
+        if (widget.classList.contains('open')) input.focus();
+    });
+    closeBtn.addEventListener('click', () => widget.classList.remove('open'));
+    
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (processing || !input.value.trim()) return;
+        
+        const msg = input.value.trim();
+        input.value = '';
+        processing = true;
+        sendBtn.disabled = true;
+        
+        addMessage('user', msg);
+        const loadingId = 'loading-' + Date.now();
+        addLoading(loadingId);
+        
+        try {
+            const res = await fetch('/api/ai-chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg, history: history })
+            });
+            const data = await res.json();
+            document.getElementById(loadingId)?.remove();
+            
+            if (data.success) {
+                addMessage('assistant', data.response);
+                history.push({ role: 'user', content: msg }, { role: 'assistant', content: data.response });
+                if (data.tool_used) {
+                    setTimeout(() => {
+                        if (confirm('Content updated via MCP! Reload to see changes?')) location.reload();
+                    }, 1000);
+                }
+            } else {
+                addMessage('assistant', 'Error: ' + data.error);
+            }
+        } catch (err) {
+            document.getElementById(loadingId)?.remove();
+            addMessage('assistant', 'Error occurred. Please try again.');
+        }
+        
+        processing = false;
+        sendBtn.disabled = false;
+        input.focus();
+    });
+    
+    function addMessage(role, content) {
+        const div = document.createElement('div');
+        div.className = 'ai-chat-message ' + role;
+        div.innerHTML = `<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${role==='user'?'#ea580c':'#6366f1'};color:white;flex-shrink:0;">${role==='user'?'👤':'🤖'}</div><div class="ai-chat-message-content">${content}</div>`;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+    }
+    
+    function addLoading(id) {
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'ai-chat-message assistant';
+        div.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#6366f1;color:white;">🤖</div><div style="padding:12px 16px;">Thinking...</div>';
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+    }
+})();
+</script>

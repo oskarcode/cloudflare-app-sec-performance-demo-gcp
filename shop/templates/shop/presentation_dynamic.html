@@ -1,0 +1,419 @@
+{% extends 'shop/base.html' %}
+{% load static %}
+
+{% block title %}Cloudflare Security Demo - Presentation{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        padding: 80px 0;
+        margin: -30px -15px 30px -15px;
+    }
+    .section-padding {
+        padding: 60px 0;
+    }
+    .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .pain-point {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+    }
+    .solution {
+        background: #dcfce7;
+        border-left: 4px solid #22c55e;
+    }
+    .metric {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #f97316;
+    }
+    .nav-pills .nav-link.active {
+        background-color: #f97316;
+    }
+    .btn-primary {
+        background-color: #f97316;
+        border-color: #f97316;
+    }
+    .btn-primary:hover {
+        background-color: #ea580c;
+        border-color: #ea580c;
+    }
+    .ai-assistant-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    .ai-assistant-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-shield-alt"></i> Cloudflare Security Demo
+                </h1>
+                <p class="lead mb-4">
+                    AI-powered dynamic presentation for e-commerce security demonstrations
+                </p>
+                <span class="badge bg-light text-dark">
+                    <i class="fas fa-robot"></i> Content powered by AI
+                </span>
+            </div>
+            <div class="col-lg-4">
+                <div class="text-center">
+                    <i class="fas fa-globe-americas" style="font-size: 200px; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Navigation Menu -->
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-pills nav-justified mb-4" id="demo-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#case-content" data-bs-toggle="pill">
+                        <i class="fas fa-briefcase"></i> Case Background
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#architecture-content" data-bs-toggle="pill">
+                        <i class="fas fa-sitemap"></i> Architecture
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#cloudflare-help-content" data-bs-toggle="pill">
+                        <i class="fas fa-hands-helping"></i> How Cloudflare Helps
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#value-content" data-bs-toggle="pill">
+                        <i class="fas fa-chart-line"></i> Business Value
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="demo-tab-content">
+        
+        <!-- Case Background -->
+        <div class="tab-pane fade show active" id="case-content">
+            <div class="row section-padding">
+                <div class="col-lg-6">
+                    <h2><i class="fas fa-building"></i> Business Context</h2>
+                    {% if case_background.business_context %}
+                    <div class="card card-hover mb-4">
+                        <div class="card-body">
+                            <h5><i class="fas fa-store"></i> {{ case_background.business_context.title }}</h5>
+                            <p>{{ case_background.business_context.description }}</p>
+                            {% if case_background.business_context.stats %}
+                            <ul class="list-unstyled">
+                                {% for stat in case_background.business_context.stats %}
+                                <li><i class="fas fa-{{ stat.icon }} text-primary"></i> <strong>{{ stat.label }}</strong> - {{ stat.value }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if case_background.current_solution %}
+                    <h3><i class="fas fa-wrench"></i> {{ case_background.current_solution.title }}</h3>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>{{ case_background.current_solution.description }}</strong>
+                        {% if case_background.current_solution.problems %}
+                        <ul class="mt-2">
+                            {% for problem in case_background.current_solution.problems %}
+                            <li>{{ problem }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-lg-6">
+                    <h3><i class="fas fa-exclamation-circle text-danger"></i> Critical Pain Points</h3>
+                    
+                    {% if case_background.pain_points %}
+                        {% for pain_point in case_background.pain_points %}
+                        <div class="card pain-point mb-3">
+                            <div class="card-body">
+                                <h6><i class="fas fa-{{ pain_point.icon }}"></i> {{ pain_point.title }}</h6>
+                                <p class="mb-1">{{ pain_point.description }}</p>
+                                {% if pain_point.test_links %}
+                                <div class="mt-2">
+                                    {% for link in pain_point.test_links %}
+                                    <small><a href="{{ link.url }}" class="btn btn-sm btn-outline-danger me-2">{{ link.text }}</a></small>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Content -->
+        <div class="tab-pane fade" id="architecture-content">
+            <div class="section-padding">
+                <h2 class="text-center mb-5"><i class="fas fa-sitemap"></i> Architecture</h2>
+                
+                {% if architecture.problems_mapping %}
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Current Problems & Solutions</h3>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Problem</th>
+                                        <th>Current Solution</th>
+                                        <th>Limitations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mapping in architecture.problems_mapping %}
+                                    <tr>
+                                        <td><strong>{{ mapping.problem }}</strong></td>
+                                        <td>{{ mapping.current_solution }}</td>
+                                        <td>
+                                            <ul class="mb-0">
+                                                {% for limit in mapping.limitations %}
+                                                <li>{{ limit }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if architecture.traffic_flow %}
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h5><i class="fas fa-arrow-right"></i> Before Cloudflare</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="list-group list-group-numbered">
+                                    {% for step in architecture.traffic_flow.before %}
+                                    <li class="list-group-item">{{ step }}</li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5><i class="fas fa-check-circle"></i> After Cloudflare</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol class="list-group list-group-numbered">
+                                    {% for step in architecture.traffic_flow.after %}
+                                    <li class="list-group-item">{{ step }}</li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- How Cloudflare Helps -->
+        <div class="tab-pane fade" id="cloudflare-help-content">
+            <div class="section-padding">
+                <h2 class="text-center mb-5"><i class="fas fa-hands-helping"></i> How Cloudflare Helps</h2>
+                
+                {% if how_cloudflare_help.solutions %}
+                <div class="row">
+                    {% for solution in how_cloudflare_help.solutions %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card solution card-hover h-100">
+                            <div class="card-body">
+                                <h5><i class="fas fa-shield-alt"></i> {{ solution.pain_point }}</h5>
+                                <p class="mb-2"><strong>Solution:</strong> {{ solution.cloudflare_solution }}</p>
+                                <p class="mb-2">{{ solution.how_it_works }}</p>
+                                <div class="mt-3">
+                                    <strong>Benefits:</strong>
+                                    <ul>
+                                        {% for benefit in solution.benefits %}
+                                        <li>{{ benefit }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if how_cloudflare_help.network_advantages %}
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h4 class="text-center mb-4"><i class="fas fa-network-wired"></i> Network Advantages</h4>
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="metric">{{ how_cloudflare_help.network_advantages.latency }}</div>
+                                        <p>Latency</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric">{{ how_cloudflare_help.network_advantages.capacity }}</div>
+                                        <p>Network Capacity</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric">{{ how_cloudflare_help.network_advantages.locations }}</div>
+                                        <p>Global Locations</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric">{{ how_cloudflare_help.network_advantages.connections }}</div>
+                                        <p>Direct Connections</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Business Value -->
+        <div class="tab-pane fade" id="value-content">
+            <div class="section-padding">
+                <h2 class="text-center mb-5"><i class="fas fa-chart-line"></i> Business Value with Cloudflare</h2>
+                
+                {% if business_value.value_propositions %}
+                <div class="row mb-5">
+                    {% for prop in business_value.value_propositions %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card card-hover h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5><i class="fas fa-{{ prop.icon }}"></i> {{ prop.title }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ prop.description }}</p>
+                                {% if prop.metrics %}
+                                <div class="mb-3">
+                                    <strong>Key Metrics:</strong>
+                                    <ul>
+                                        {% for metric in prop.metrics %}
+                                        <li><strong>{{ metric.label }}:</strong> <span class="text-success">{{ metric.improvement }}</span></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                {% if prop.learn_more %}
+                                <div>
+                                    <strong>Learn more:</strong>
+                                    <ul class="list-unstyled">
+                                        {% for link in prop.learn_more %}
+                                        <li><a href="{{ link.url }}">{{ link.text }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if business_value.roi_summary %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-center mb-4"><i class="fas fa-calculator"></i> ROI Summary</h3>
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="metric text-success">{{ business_value.roi_summary.implementation_time }}</div>
+                                        <div>Implementation Time</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric text-primary">{{ business_value.roi_summary.payback_period }}</div>
+                                        <div>Payback Period</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric text-warning">{{ business_value.roi_summary.annual_savings }}</div>
+                                        <div>Annual Savings</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric text-danger">{{ business_value.roi_summary.revenue_impact }}</div>
+                                        <div>Revenue Impact</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Assistant Button -->
+<button class="ai-assistant-btn" id="ai-assistant-btn">
+    <i class="fas fa-robot"></i> AI Assistant
+</button>
+
+<!-- AI Chat Widget -->
+{% include 'shop/includes/ai_chat_widget.html' %}
+
+<script>
+// Placeholder for AI assistant - will be replaced with MCP Connector
+document.getElementById('ai-assistant-btn').addEventListener('click', function() {
+    alert('AI Assistant coming soon! This will allow you to edit presentation content via natural language.');
+});
+
+// Auto-advance demo sections (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dynamic Cloudflare Security Demo Presentation Ready');
+    console.log('Content loaded from database - AI editable via MCP');
+});
+</script>
+
+{% endblock %}

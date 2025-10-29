@@ -1,0 +1,28 @@
+# Cloudflare Workers Configuration
+# MCP Server for Presentation Content Management
+
+name = "presentation-mcp-server"
+main = "presentation-mcp-server.js"
+compatibility_date = "2024-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Account and Zone Configuration
+account_id = "f2b0debf4bd2bf50f7d1a81d1ab88946"
+
+# Worker Settings
+workers_dev = false  # Deploy to custom domain
+route = { pattern = "appdemo.oskarcode.com/mcp/*", zone_id = "f975338ef7c3fbe41c0bac2f99f458c0" }
+
+# Alternative: Deploy to workers.dev subdomain for testing
+# workers_dev = true
+# This will create: presentation-mcp-server.<your-subdomain>.workers.dev
+
+# Environment Variables
+[vars]
+DJANGO_API_URL = "https://appdemo.oskarcode.com"
+MCP_VERSION = "2024-11-05"
+
+# Limits and Configuration
+[limits]
+cpu_ms = 50     # 50ms CPU limit per request
+memory_mb = 128 # 128MB memory limit

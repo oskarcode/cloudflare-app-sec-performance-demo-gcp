@@ -24,8 +24,13 @@ export default {
                      request.headers.get('X-Forwarded-For') || 
                      'unknown';
     
-    // Create cache key for this IP
-    const cacheKey = `flash_sale_${clientIP}`;
+    // Create cache key for this IP with version prefix to bust stale cache
+    const CACHE_VERSION = 'v3'; // increment this to clear all cached entries
+    const cacheKey = `${CACHE_VERSION}_flash_sale_${clientIP}`;
+    
+    // Get configured rate limit window and request threshold
+    const rateLimitSeconds = parseInt(env?.RATE_LIMIT_SECONDS || '10', 10);
+    const maxRequests = parseInt(env?.MAX_REQUESTS_PER_PERIOD || '1', 10);
     
     try {
       // Check if this IP has accessed flash sale recently
@@ -33,9 +38,25 @@ export default {
       const cacheUrl = new URL(`https://flash-sale-cache.example.com/${cacheKey}`);
       const cachedResponse = await cache.match(cacheUrl);
       
+      let requestCount = 0;
+      
       if (cachedResponse) {
-        // IP is rate limited - show "please wait" message
-        console.log(`FLASH SALE RATE LIMITED: IP ${clientIP} - too many requests`);
+        // Read current request count from cache
+        const cacheData = await cachedResponse.text();
+        try {
+          const data = JSON.parse(cacheData);
+          requestCount = data.count || 0;
+        } catch (e) {
+          requestCount = 1; // fallback for old cache format
+        }
+        
+        // Increment the count
+        requestCount++;
+        
+        // Check if exceeded limit
+        if (requestCount > maxRequests) {
+          // IP is rate limited - show "please wait" message
+          console.log(`FLASH SALE RATE LIMITED: IP ${clientIP} - ${requestCount} requests - limit is ${maxRequests}`);
         
         return new Response(`
 <!DOCTYPE html>
@@ -46,7 +67,7 @@ export default {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8f9fa; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { position: relative; z-index: 9999; max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .emoji { font-size: 48px; margin-bottom: 20px; }
         h1 { color: #dc3545; margin-bottom: 20px; }
         p { color: #6c757d; font-size: 18px; line-height: 1.6; }
@@ -59,7 +80,8 @@ export default {
         <div class="emoji">🔥</div>
         <h1>Flash Sale - High Demand!</h1>
         <p>Our flash sale is experiencing extremely high traffic. To ensure fair access for all customers, we're limiting requests.</p>
-        <div class="timer">⏰ Please wait 10 seconds before trying again</div>
+        <p><strong>You've made ${requestCount} requests.</strong> Limit is ${maxRequests} requests per ${rateLimitSeconds} seconds.</p>
+        <div class="timer">⏰ Please wait ${rateLimitSeconds} seconds before trying again</div>
         <p><strong>Why this helps:</strong><br>
         • Prevents bots from buying all deals instantly<br>
         • Ensures real customers get fair access<br>
@@ -70,12 +92,33 @@ export default {
         </p>
     </div>
     <script>
-        // Auto-refresh after 10 seconds
-        setTimeout(function() {
-            document.querySelector('.timer').innerHTML = '⏰ You can try again now!';
-            document.querySelector('.btn').innerHTML = '🔄 Try Flash Sale Again';
-            document.querySelector('.btn').href = window.location.pathname;
-        }, 10000);
+        // Live countdown based on configured retry window and auto-retry with buffer to avoid TTL drift
+        var btn = document.querySelector('.btn');
+        var timerEl = document.querySelector('.timer');
+        var retryAfter = ${rateLimitSeconds};
+        var bufferSec = 2; // extra seconds to avoid re-hitting TTL
+        var start = Date.now();
+        var remaining = retryAfter;
+
+        // Keep the message visible
+        window.scrollTo(0, 0);
+
+        var intId = setInterval(function() {
+            var elapsed = Math.floor((Date.now() - start) / 1000);
+            remaining = Math.max(0, retryAfter - elapsed);
+            timerEl.textContent = '⏰ Please wait ' + remaining + 's before trying again';
+            if (remaining === 0) {
+                clearInterval(intId);
+                timerEl.textContent = '⏰ You can try again now!';
+                btn.textContent = '🔄 Try Flash Sale Again';
+                btn.href = window.location.href; // use full URL, keep query/hash
+                // brief message before retry to ensure TTL expired at the edge
+                setTimeout(function() {
+                    timerEl.textContent = '⏳ Trying again...';
+                    location.replace(window.location.href);
+                }, bufferSec * 1000);
+            }
+        }, 1000);
     </script>
 </body>
 </html>`, {
@@ -83,21 +126,28 @@ export default {
           headers: {
             'Content-Type': 'text/html',
             'X-Rate-Limited': 'true',
-            'X-Rate-Limit-Reset': '10',
+            'X-Rate-Limit-Reset': String(rateLimitSeconds),
+            'X-Rate-Limit': String(maxRequests),
+            'X-Request-Count': String(requestCount),
             'X-Protected-By': 'Cloudflare-Workers',
+            'X-Cache-Status': 'HIT',
+            'X-Cache-Key': cacheKey,
             'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Retry-After': '10'
+            'Retry-After': String(rateLimitSeconds)
           }
         });
+        }
       }
       
-      // First time or after cooldown - allow access but set rate limit
-      console.log(`FLASH SALE ACCESS: IP ${clientIP} - access granted`);
+      // Still under the limit - allow access and update count
+      console.log(`FLASH SALE ACCESS: IP ${clientIP} - request ${requestCount} of ${maxRequests} allowed`);
       
-      // Store in cache for 10 seconds
-      const rateLimitResponse = new Response('rate-limited', {
+      // Store updated count in cache for configured seconds
+      const cacheData = JSON.stringify({ count: requestCount, timestamp: Date.now() });
+      const rateLimitResponse = new Response(cacheData, {
         headers: {
-          'Cache-Control': 'max-age=10'
+          'Cache-Control': `max-age=${rateLimitSeconds}`,
+          'Content-Type': 'application/json'
         }
       });
       
@@ -116,7 +166,11 @@ export default {
       
       // Add security headers
       protectedResponse.headers.set('X-Flash-Sale-Protected', 'true');
-      protectedResponse.headers.set('X-Rate-Limit-Remaining', 'Cooldown active for 10s');
+      protectedResponse.headers.set('X-Rate-Limit', String(maxRequests));
+      protectedResponse.headers.set('X-Request-Count', String(requestCount));
+      protectedResponse.headers.set('X-Rate-Limit-Remaining', String(Math.max(0, maxRequests - requestCount)));
+      protectedResponse.headers.set('X-Cache-Status', requestCount === 0 ? 'MISS' : 'HIT');
+      protectedResponse.headers.set('X-Cache-Key', cacheKey);
       protectedResponse.headers.set('X-Client-IP', clientIP);
       
       return protectedResponse;

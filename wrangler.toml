@@ -7,11 +7,11 @@ compatibility_date = "2024-08-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Account and Zone Configuration - REPLACE WITH YOUR VALUES
-# account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+account_id = "f2b0debf4bd2bf50f7d1a81d1ab88946"
 
 # Worker Settings
 workers_dev = false  # Deploy to custom domain, not workers.dev
-# route = { pattern = "demo.oskarcode.com/flash-sale*", zone_id = "YOUR_ZONE_ID" }
+route = { pattern = "appdemo.oskarcode.com/flash-sale*", zone_id = "f975338ef7c3fbe41c0bac2f99f458c0" }
 
 # Environment Variables
 [env.production]

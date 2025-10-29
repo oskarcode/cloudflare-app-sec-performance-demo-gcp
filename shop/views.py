@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import Product
+from .models import Product, PresentationSection
 import json
 
 def home(request):
@@ -110,8 +110,22 @@ def api_login_test(request):
 def presentation(request):
     """
     Professional presentation page for security demonstrations.
+    Now with dynamic content from database (AI-editable).
     """
-    return render(request, 'shop/presentation.html')
+    # Fetch all presentation sections from database
+    sections = {}
+    for section in PresentationSection.objects.all():
+        sections[section.section_type] = section.content_json
+    
+    # Provide default empty dicts if sections don't exist
+    context = {
+        'case_background': sections.get('case_background', {}),
+        'architecture': sections.get('architecture', {}),
+        'how_cloudflare_help': sections.get('how_cloudflare_help', {}),
+        'business_value': sections.get('business_value', {}),
+    }
+    
+    return render(request, 'shop/presentation_dynamic.html', context)
 
 def flash_sale(request):
     """
@@ -190,3 +204,188 @@ def health_check(request):
             'error': str(e),
             'timestamp': timezone.now().isoformat()
         }, status=503)
+
+
+# =====================================================
+# PRESENTATION API VIEWS (for AI-assisted editing)
+# =====================================================
+
+def api_presentation_sections(request):
+    """Get all presentation sections"""
+    sections = PresentationSection.objects.all()
+    data = {
+        section.section_type: {
+            'content': section.content_json,
+            'last_modified': section.last_modified.isoformat(),
+            'version': section.version
+        }
+        for section in sections
+    }
+    return JsonResponse(data)
+
+
+def api_presentation_section(request, section_type):
+    """Get a specific presentation section"""
+    try:
+        section = PresentationSection.objects.get(section_type=section_type)
+        data = {
+            'section_type': section.section_type,
+            'content': section.content_json,
+            'last_modified': section.last_modified.isoformat(),
+            'version': section.version
+        }
+        return JsonResponse(data)
+    except PresentationSection.DoesNotExist:
+        return JsonResponse(
+            {'error': f'Section {section_type} not found'},
+            status=404
+        )
+
+
+@csrf_exempt
+def api_presentation_section_update(request, section_type):
+    """Update a presentation section (used by AI via MCP)"""
+    if request.method != 'PUT':
+        return JsonResponse({'error': 'PUT method required'}, status=405)
+    
+    try:
+        # Parse JSON body
+        data = json.loads(request.body)
+        content = data.get('content')
+        
+        if not content:
+            return JsonResponse(
+                {'error': 'Content is required'},
+                status=400
+            )
+        
+        # Get or create section
+        section, created = PresentationSection.objects.get_or_create(
+            section_type=section_type,
+            defaults={'content_json': content}
+        )
+        
+        if not created:
+            section.content_json = content
+            section.save()
+        
+        return JsonResponse({
+            'success': True,
+            'section_type': section.section_type,
+            'version': section.version,
+            'last_modified': section.last_modified.isoformat(),
+            'created': created
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {'error': 'Invalid JSON'},
+            status=400
+        )
+    except Exception as e:
+        return JsonResponse(
+            {'error': str(e)},
+            status=500
+        )
+
+
+# =====================================================
+# AI CHAT WITH CLAUDE & MCP INTEGRATION
+# =====================================================
+
+import os
+import requests
+from anthropic import Anthropic
+
+@csrf_exempt
+def ai_chat(request):
+    """
+    AI chat endpoint that integrates Claude with MCP tools.
+    Allows natural language editing of presentation content.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+    
+    try:
+        # Get API key from environment
+        api_key = os.getenv('CLAUDE_API_KEY')
+        if not api_key:
+            return JsonResponse({
+                'error': 'CLAUDE_API_KEY not configured'
+            }, status=500)
+        
+        # Parse request body
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+        conversation_history = data.get('history', [])
+        
+        if not user_message:
+            return JsonResponse({'error': 'Message is required'}, status=400)
+        
+        # Initialize Claude client
+        # Note: For local development only - disable SSL verification to bypass macOS Python 3.14 SSL cert issues
+        # TODO: Fix SSL certificates properly for production (see AI_CHAT_SETUP.md)
+        import httpx
+        
+        # Create httpx client without SSL verification (local dev only!)
+        http_client = httpx.Client(verify=False)
+        
+        client = Anthropic(api_key=api_key, http_client=http_client)
+        
+        # Build messages array
+        messages = conversation_history + [
+            {"role": "user", "content": user_message}
+        ]
+        
+        # System prompt
+        system_prompt = """You are an AI assistant helping to manage a Cloudflare security demonstration presentation.
+
+You have access to tools via MCP server to manage presentation content with 4 sections:
+1. case_background - Business context, current solution, and pain points
+2. architecture - Problems mapping and traffic flow diagrams
+3. how_cloudflare_help - Solutions mapping to pain points and network advantages
+4. business_value - Value propositions and ROI summary
+
+When users ask to view or modify content, use the available MCP tools.
+Be conversational and helpful. The presentation page will automatically refresh to show updates."""
+
+        # Get MCP server URL from environment
+        mcp_server_url = os.getenv('MCP_SERVER_URL', 'https://appdemo.oskarcode.com/mcp')
+        
+        # Call Claude API with MCP Connector
+        response = client.beta.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=4096,
+            system=system_prompt,
+            messages=messages,
+            mcp_servers=[{
+                "type": "url",
+                "url": f"{mcp_server_url}/sse",
+                "name": "presentation-manager"
+            }],
+            betas=["mcp-client-2025-04-04"]
+        )
+        
+        # Extract response from Claude
+        # With MCP Connector, Claude handles all tool execution automatically
+        response_text = ""
+        tool_used = False
+        
+        for block in response.content:
+            if block.type == "text":
+                response_text += block.text
+            # MCP Connector handles tool_use blocks automatically
+            # We just check if tools were used for UI feedback
+            elif hasattr(block, 'type') and 'tool' in block.type:
+                tool_used = True
+        
+        return JsonResponse({
+            'success': True,
+            'response': response_text,
+            'tool_used': tool_used
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
