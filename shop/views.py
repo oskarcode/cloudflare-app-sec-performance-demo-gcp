@@ -344,6 +344,13 @@ GOOD (3 sentences max):
 BAD (too long):
 "You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally. They're a mid-sized business (~50-100 employees, $10-25M revenue)... [continues with multiple paragraphs]"
 
+IMPORTANT - Network Advantages Format:
+When updating network_advantages, use CONCISE stats only:
+- latency: "~50ms from 95% of population" (NOT full sentence)
+- network_capacity: "405 Tbps" (NOT description of what it consists of)
+- locations: "330 cities in 125+ countries" (short version)
+- direct_connections: "13,000 networks" (NOT full sentence about ISPs)
+
 Your job: Answer in 3 sentences or less. Period."""
 
         # Get MCP server URL
