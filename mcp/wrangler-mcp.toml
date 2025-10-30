@@ -28,6 +28,5 @@ binding = "MCP_OBJECT"
 type = "mcp"
 
 # Limits and Configuration
-[limits]
-cpu_ms = 50     # 50ms CPU limit per request
-memory_mb = 128 # 128MB memory limit
+# Note: Removed limits to allow SSE streaming connections
+# SSE endpoints need to maintain long-lived connections
