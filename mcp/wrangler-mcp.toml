@@ -2,7 +2,7 @@
 # MCP Server for Presentation Content Management
 
 name = "presentation-mcp-server"
-main = "./presentation-mcp-server.ts"
+main = "./presentation-mcp-server-sdk.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 

@@ -26,4 +26,4 @@ memory_mb = 128 # 128MB memory limit
 [vars]
 ENVIRONMENT = "production"
 RATE_LIMIT_SECONDS = "10"
-MAX_REQUESTS_PER_PERIOD = "1"
+MAX_REQUESTS_PER_PERIOD = "5"
