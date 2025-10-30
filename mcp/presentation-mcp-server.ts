@@ -253,15 +253,30 @@ export default {
         const writer = writable.getWriter();
         const encoder = new TextEncoder();
         
-        // Keep connection alive with heartbeats only
-        // Don't send initialized message on SSE - let client request it via POST
-        const interval = setInterval(() => {
+        // Send immediate connection message
+        (async () => {
           try {
-            writer.write(encoder.encode(`: keepalive\n\n`));
+            await writer.write(encoder.encode(`: MCP SSE connection established\n\n`));
+            
+            // Keep connection alive with periodic heartbeats
+            const interval = setInterval(async () => {
+              try {
+                await writer.write(encoder.encode(`: keepalive\n\n`));
+              } catch (e) {
+                clearInterval(interval);
+                writer.close();
+              }
+            }, 15000);
+            
+            // Handle connection close
+            request.signal?.addEventListener('abort', () => {
+              clearInterval(interval);
+              writer.close();
+            });
           } catch (e) {
-            clearInterval(interval);
+            writer.close();
           }
-        }, 15000);
+        })();
         
         return new Response(readable, {
           headers: {
