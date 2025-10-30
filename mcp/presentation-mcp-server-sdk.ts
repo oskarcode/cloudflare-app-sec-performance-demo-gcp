@@ -1,8 +1,6 @@
 // Presentation MCP Server using Cloudflare Agent SDK
 import { McpAgent } from "agents/mcp";
 import { z } from "zod";
-// @ts-ignore - McpServer is available from agents' bundled SDK
-import { McpServer } from "agents/node_modules/@modelcontextprotocol/sdk/dist/server/mcp.js";
 
 // Django API configuration
 const DJANGO_API_BASE = "https://appdemo.oskarcode.com";
@@ -37,10 +35,8 @@ async function callDjangoAPI(endpoint: string, method: string = "GET", body?: an
 
 // Define our MCP agent for presentation content management
 export class PresentationMCP extends McpAgent {
-    server = new McpServer({
-        name: "presentation-content-manager",
-        version: "1.0.0",
-    });
+    name = "presentation-content-manager";
+    version = "1.0.0";
 
     async init() {
         // Tool: Get all presentation sections
