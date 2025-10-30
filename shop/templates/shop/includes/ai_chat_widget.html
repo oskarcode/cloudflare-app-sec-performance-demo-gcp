@@ -39,6 +39,20 @@
         padding: 0;
         line-height: 1;
     }
+    .ai-chat-clear {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-right: 10px;
+        transition: background 0.2s;
+    }
+    .ai-chat-clear:hover {
+        background: rgba(255,255,255,0.3);
+    }
     .ai-chat-messages {
         flex: 1;
         padding: 15px;
@@ -180,7 +194,12 @@
 <div class="ai-chat-widget" id="ai-chat-widget">
     <div class="ai-chat-header">
         <h5><i class="fas fa-robot"></i> AI Assistant</h5>
-        <button class="ai-chat-close" id="ai-chat-close">&times;</button>
+        <div>
+            <button class="ai-chat-clear" id="ai-chat-clear" title="Clear chat history">
+                <i class="fas fa-trash-alt"></i> Clear
+            </button>
+            <button class="ai-chat-close" id="ai-chat-close">&times;</button>
+        </div>
     </div>
     <div class="ai-chat-messages" id="ai-chat-messages">
         <div class="ai-message assistant">
@@ -218,13 +237,62 @@
         const widget = document.getElementById('ai-chat-widget');
         const btn = document.getElementById('ai-assistant-btn');
         const closeBtn = document.getElementById('ai-chat-close');
+        const clearBtn = document.getElementById('ai-chat-clear');
         const form = document.getElementById('ai-chat-form');
         const input = document.getElementById('ai-chat-input');
         const messagesDiv = document.getElementById('ai-chat-messages');
         const thinkingDiv = document.getElementById('ai-thinking');
         const sendBtn = document.getElementById('ai-chat-send');
         
+        const STORAGE_KEY = 'ai_chat_history';
+        const STORAGE_CONVERSATION_KEY = 'ai_conversation_history';
         let conversationHistory = [];
+        
+        // Load chat history from localStorage
+        function loadChatHistory() {
+            try {
+                const savedMessages = localStorage.getItem(STORAGE_KEY);
+                const savedConversation = localStorage.getItem(STORAGE_CONVERSATION_KEY);
+                
+                if (savedMessages) {
+                    const messages = JSON.parse(savedMessages);
+                    // Clear welcome message
+                    messagesDiv.innerHTML = '';
+                    // Restore messages
+                    messages.forEach(msg => {
+                        addMessage(msg.role, msg.content, false);
+                    });
+                }
+                
+                if (savedConversation) {
+                    conversationHistory = JSON.parse(savedConversation);
+                }
+            } catch (e) {
+                console.error('Error loading chat history:', e);
+            }
+        }
+        
+        // Save chat history to localStorage
+        function saveChatHistory() {
+            try {
+                const messages = [];
+                messagesDiv.querySelectorAll('.ai-message').forEach(msg => {
+                    const role = msg.classList.contains('user') ? 'user' : 'assistant';
+                    const content = msg.querySelector('.ai-message-content').textContent;
+                    messages.push({ role, content });
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+                localStorage.setItem(STORAGE_CONVERSATION_KEY, JSON.stringify(conversationHistory));
+            } catch (e) {
+                console.error('Error saving chat history:', e);
+            }
+        }
+        
+        // Clear chat history
+        function clearChatHistory() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(STORAGE_CONVERSATION_KEY);
+        }
         
         // Toggle widget
         btn.addEventListener('click', () => {
@@ -236,8 +304,24 @@
             widget.classList.remove('active');
         });
         
+        // Clear chat history
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Clear all chat history? This cannot be undone.')) {
+                clearChatHistory();
+                conversationHistory = [];
+                messagesDiv.innerHTML = `
+                    <div class="ai-message assistant">
+                        <div class="ai-message-avatar">🤖</div>
+                        <div class="ai-message-content">
+                            Chat history cleared! How can I help you?
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
         // Add message to chat
-        function addMessage(role, content) {
+        function addMessage(role, content, save = true) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `ai-message ${role}`;
             
@@ -247,7 +331,13 @@
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'ai-message-content';
-            contentDiv.textContent = content;
+            
+            // Support HTML content
+            if (content.includes('<')) {
+                contentDiv.innerHTML = content;
+            } else {
+                contentDiv.textContent = content;
+            }
             
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentDiv);
@@ -255,6 +345,11 @@
             
             // Scroll to bottom
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Save to localStorage
+            if (save) {
+                saveChatHistory();
+            }
         }
         
         // Handle form submission
@@ -292,12 +387,14 @@
                     
                     // Update conversation history
                     conversationHistory = data.conversation || [];
+                    saveChatHistory();
                     
-                    // If tool was used, reload page after 2 seconds
+                    // If tool was used, show refresh message and reload
                     if (data.tool_used) {
+                        addMessage('assistant', '✅ Content updated! Refreshing page in 3 seconds...');
                         setTimeout(() => {
                             location.reload();
-                        }, 2000);
+                        }, 3000);
                     }
                 } else {
                     addMessage('assistant', `Error: ${data.error}`);
@@ -311,5 +408,11 @@
                 input.focus();
             }
         });
+        
+        // Load history on page load
+        loadChatHistory();
+        
+        // Add "Clear History" button (optional - can be added to UI if needed)
+        window.clearAIChatHistory = clearChatHistory;
     })();
 </script>
