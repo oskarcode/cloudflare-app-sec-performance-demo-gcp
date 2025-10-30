@@ -248,37 +248,31 @@ export default {
     try {
       // SSE endpoint for MCP connections  
       if ((url.pathname === "/mcp/sse" || url.pathname === "/sse") && request.method === "GET") {
-        // Create SSE stream
-        const { readable, writable } = new TransformStream();
-        const writer = writable.getWriter();
         const encoder = new TextEncoder();
+        let intervalId: number | null = null;
         
-        // Send immediate connection message
-        (async () => {
-          try {
-            await writer.write(encoder.encode(`: MCP SSE connection established\n\n`));
+        // Create SSE stream using ReadableStream
+        const stream = new ReadableStream({
+          start(controller) {
+            // Send immediate connection message
+            controller.enqueue(encoder.encode(`: MCP SSE connection established\n\n`));
             
-            // Keep connection alive with periodic heartbeats
-            const interval = setInterval(async () => {
+            // Send periodic heartbeats
+            intervalId = setInterval(() => {
               try {
-                await writer.write(encoder.encode(`: keepalive\n\n`));
+                controller.enqueue(encoder.encode(`: keepalive ${new Date().toISOString()}\n\n`));
               } catch (e) {
-                clearInterval(interval);
-                writer.close();
+                if (intervalId) clearInterval(intervalId);
+                controller.close();
               }
-            }, 15000);
-            
-            // Handle connection close
-            request.signal?.addEventListener('abort', () => {
-              clearInterval(interval);
-              writer.close();
-            });
-          } catch (e) {
-            writer.close();
+            }, 15000) as unknown as number;
+          },
+          cancel() {
+            if (intervalId) clearInterval(intervalId);
           }
-        })();
+        });
         
-        return new Response(readable, {
+        return new Response(stream, {
           headers: {
             ...corsHeaders,
             "Content-Type": "text/event-stream",
