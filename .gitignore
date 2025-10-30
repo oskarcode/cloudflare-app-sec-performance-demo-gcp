@@ -166,3 +166,4 @@ credentials.env
 credentials.local.env
 *.credentialsnode_modules/
 package-lock.json
+test.txt

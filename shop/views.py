@@ -2,12 +2,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import Product, PresentationSection
 import json
+import requests
 
 def home(request):
     products = Product.objects.all()[:12]
@@ -287,3 +288,114 @@ def api_presentation_section_update(request, section_type):
             {'error': str(e)},
             status=500
         )
+
+
+# =====================================================
+# AI CHAT WITH MCP CONNECTOR
+# =====================================================
+
+@csrf_exempt
+def ai_chat(request):
+    """
+    AI chat endpoint that integrates Claude with MCP connector.
+    Allows natural language editing of presentation content.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+    
+    try:
+        # Get API key from environment
+        import os
+        api_key = os.getenv('CLAUDE_API_KEY')
+        if not api_key:
+            return JsonResponse({
+                'error': 'CLAUDE_API_KEY not configured'
+            }, status=500)
+        
+        # Parse request body
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+        conversation_history = data.get('history', [])
+        
+        if not user_message:
+            return JsonResponse({'error': 'Message is required'}, status=400)
+        
+        # Build messages array
+        messages = conversation_history + [
+            {"role": "user", "content": user_message}
+        ]
+        
+        # System prompt
+        system_prompt = """You are an AI assistant helping to manage a Cloudflare security demonstration presentation.
+
+You have access to tools via MCP server to manage presentation content with 4 sections:
+1. case_background - Business context, current solution, and pain points
+2. architecture - Problems mapping and traffic flow diagrams
+3. how_cloudflare_help - Solutions mapping to pain points and network advantages
+4. business_value - Value propositions and ROI summary
+
+When users ask to view or modify content, use the available MCP tools.
+Be conversational and helpful. After making updates, confirm what was changed."""
+
+        # Get MCP server URL
+        mcp_server_url = os.getenv('MCP_SERVER_URL', 'https://appdemo.oskarcode.com/mcp')
+        
+        # Call Claude API with MCP Connector
+        response = requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'Content-Type': 'application/json',
+                'X-API-Key': api_key,
+                'anthropic-version': '2023-06-01',
+                'anthropic-beta': 'mcp-client-2025-04-04'
+            },
+            json={
+                'model': 'claude-sonnet-4-5',
+                'max_tokens': 4096,
+                'system': system_prompt,
+                'messages': messages,
+                'mcp_servers': [
+                    {
+                        'type': 'url',
+                        'url': f'{mcp_server_url}/sse',
+                        'name': 'presentation-manager'
+                    }
+                ]
+            },
+            timeout=60
+        )
+        
+        response.raise_for_status()
+        result = response.json()
+        
+        # Extract response text from Claude
+        response_text = ""
+        tool_used = False
+        
+        if 'content' in result:
+            for block in result['content']:
+                if block.get('type') == 'text':
+                    response_text += block.get('text', '')
+                elif 'tool' in block.get('type', ''):
+                    tool_used = True
+        
+        # Build conversation history for next turn
+        assistant_message = {
+            'role': 'assistant',
+            'content': result.get('content', [])
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'response': response_text,
+            'tool_used': tool_used,
+            'conversation': messages + [assistant_message],
+            'usage': result.get('usage', {})
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'API request failed: {str(e)}'}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

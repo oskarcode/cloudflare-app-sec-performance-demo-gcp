@@ -1,0 +1,315 @@
+<!-- AI Chat Widget -->
+<style>
+    .ai-chat-widget {
+        position: fixed;
+        bottom: 80px;
+        right: 30px;
+        width: 380px;
+        max-height: 600px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        display: none;
+        flex-direction: column;
+        z-index: 1001;
+        overflow: hidden;
+    }
+    .ai-chat-widget.active {
+        display: flex;
+    }
+    .ai-chat-header {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .ai-chat-header h5 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .ai-chat-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    .ai-chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        max-height: 400px;
+        background: #f8f9fa;
+    }
+    .ai-message {
+        margin-bottom: 12px;
+        display: flex;
+        gap: 8px;
+    }
+    .ai-message.user {
+        flex-direction: row-reverse;
+    }
+    .ai-message-content {
+        max-width: 75%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    .ai-message.assistant .ai-message-content {
+        background: white;
+        border: 1px solid #e5e7eb;
+    }
+    .ai-message.user .ai-message-content {
+        background: #f97316;
+        color: white;
+    }
+    .ai-message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 16px;
+    }
+    .ai-message.assistant .ai-message-avatar {
+        background: #f97316;
+        color: white;
+    }
+    .ai-message.user .ai-message-avatar {
+        background: #cbd5e1;
+        color: #475569;
+    }
+    .ai-chat-input-area {
+        padding: 15px;
+        border-top: 1px solid #e5e7eb;
+        background: white;
+    }
+    .ai-chat-input-form {
+        display: flex;
+        gap: 8px;
+    }
+    .ai-chat-input {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+    }
+    .ai-chat-input:focus {
+        border-color: #f97316;
+    }
+    .ai-chat-send {
+        background: #f97316;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .ai-chat-send:hover {
+        background: #ea580c;
+    }
+    .ai-chat-send:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+    }
+    .ai-thinking {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        color: #64748b;
+        font-size: 14px;
+    }
+    .ai-thinking.active {
+        display: flex;
+    }
+    .ai-thinking-dots span {
+        animation: thinking 1.4s infinite;
+        animation-fill-mode: both;
+    }
+    .ai-thinking-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    .ai-thinking-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    @keyframes thinking {
+        0%, 80%, 100% { opacity: 0.3; }
+        40% { opacity: 1; }
+    }
+    .ai-assistant-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+    .ai-assistant-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+    }
+</style>
+
+<!-- AI Assistant Button -->
+<button class="ai-assistant-btn" id="ai-assistant-btn">
+    <i class="fas fa-robot"></i> AI Assistant
+</button>
+
+<!-- AI Chat Widget -->
+<div class="ai-chat-widget" id="ai-chat-widget">
+    <div class="ai-chat-header">
+        <h5><i class="fas fa-robot"></i> AI Assistant</h5>
+        <button class="ai-chat-close" id="ai-chat-close">&times;</button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="ai-message assistant">
+            <div class="ai-message-avatar">🤖</div>
+            <div class="ai-message-content">
+                Hi! I'm your AI assistant. I can help you update the presentation content. Try asking me to:
+                <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                    <li>Show current content</li>
+                    <li>Update a specific section</li>
+                    <li>Change business context</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="ai-thinking" id="ai-thinking">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>AI is thinking</span>
+        <div class="ai-thinking-dots">
+            <span>.</span><span>.</span><span>.</span>
+        </div>
+    </div>
+    <div class="ai-chat-input-area">
+        <form class="ai-chat-input-form" id="ai-chat-form">
+            <input type="text" class="ai-chat-input" id="ai-chat-input" placeholder="Ask me anything..." autocomplete="off">
+            <button type="submit" class="ai-chat-send" id="ai-chat-send">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // AI Chat Widget JavaScript
+    (function() {
+        const widget = document.getElementById('ai-chat-widget');
+        const btn = document.getElementById('ai-assistant-btn');
+        const closeBtn = document.getElementById('ai-chat-close');
+        const form = document.getElementById('ai-chat-form');
+        const input = document.getElementById('ai-chat-input');
+        const messagesDiv = document.getElementById('ai-chat-messages');
+        const thinkingDiv = document.getElementById('ai-thinking');
+        const sendBtn = document.getElementById('ai-chat-send');
+        
+        let conversationHistory = [];
+        
+        // Toggle widget
+        btn.addEventListener('click', () => {
+            widget.classList.add('active');
+            input.focus();
+        });
+        
+        closeBtn.addEventListener('click', () => {
+            widget.classList.remove('active');
+        });
+        
+        // Add message to chat
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'ai-message-avatar';
+            avatar.textContent = role === 'assistant' ? '🤖' : '👤';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'ai-message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+            
+            // Show thinking indicator
+            thinkingDiv.classList.add('active');
+            sendBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/ai-chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: conversationHistory
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add AI response
+                    addMessage('assistant', data.response);
+                    
+                    // Update conversation history
+                    conversationHistory = data.conversation || [];
+                    
+                    // If tool was used, reload page after 2 seconds
+                    if (data.tool_used) {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    }
+                } else {
+                    addMessage('assistant', `Error: ${data.error}`);
+                }
+            } catch (error) {
+                addMessage('assistant', `Error: ${error.message}`);
+            } finally {
+                // Hide thinking indicator
+                thinkingDiv.classList.remove('active');
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        });
+    })();
+</script>
