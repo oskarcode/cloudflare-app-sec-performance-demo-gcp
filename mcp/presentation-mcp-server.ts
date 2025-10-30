@@ -215,7 +215,13 @@ function getCorsHeaders(request: Request): Record<string, string> {
     "http://localhost:5173",
   ];
 
-  const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : "*";
+  // Allow all Cloudflare dashboard domains
+  const isCloudflareOrigin = origin && (
+    origin.includes(".cloudflare.com") ||
+    origin.includes(".cloudflarestatus.com")
+  );
+
+  const corsOrigin = (origin && (allowedOrigins.includes(origin) || isCloudflareOrigin)) ? origin : "*";
 
   return {
     "Access-Control-Allow-Origin": corsOrigin,
