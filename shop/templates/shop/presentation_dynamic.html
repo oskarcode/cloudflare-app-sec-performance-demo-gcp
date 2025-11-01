@@ -169,22 +169,16 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Problem</th>
-                                        <th>Current Solution</th>
-                                        <th>Limitations</th>
+                                        <th>Technical Cause</th>
+                                        <th>Cloudflare Solution</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for mapping in architecture.problems_mapping %}
                                     <tr>
                                         <td><strong>{{ mapping.problem }}</strong></td>
-                                        <td>{{ mapping.current_solution }}</td>
-                                        <td>
-                                            <ul class="mb-0">
-                                                {% for limit in mapping.limitations %}
-                                                <li>{{ limit }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </td>
+                                        <td>{{ mapping.technical_cause }}</td>
+                                        <td><span class="badge bg-success">{{ mapping.cloudflare_solution }}</span></td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -203,7 +197,7 @@
                             </div>
                             <div class="card-body">
                                 <ol class="list-group list-group-numbered">
-                                    {% for step in architecture.traffic_flow.before %}
+                                    {% for step in architecture.traffic_flow.before_cloudflare %}
                                     <li class="list-group-item">{{ step }}</li>
                                     {% endfor %}
                                 </ol>
@@ -217,7 +211,7 @@
                             </div>
                             <div class="card-body">
                                 <ol class="list-group list-group-numbered">
-                                    {% for step in architecture.traffic_flow.after %}
+                                    {% for step in architecture.traffic_flow.after_cloudflare %}
                                     <li class="list-group-item">{{ step }}</li>
                                     {% endfor %}
                                 </ol>
@@ -240,16 +234,12 @@
                     <div class="col-lg-6 mb-4">
                         <div class="card solution card-hover h-100">
                             <div class="card-body">
-                                <h5><i class="fas fa-shield-alt"></i> {{ solution.pain_point }}</h5>
-                                <p class="mb-2"><strong>Solution:</strong> {{ solution.cloudflare_solution }}</p>
-                                <p class="mb-2">{{ solution.how_it_works }}</p>
+                                <h5><i class="fas fa-shield-alt"></i> {{ solution.product }}</h5>
+                                <p class="mb-2"><strong>Capability:</strong> {{ solution.capability }}</p>
                                 <div class="mt-3">
-                                    <strong>Benefits:</strong>
-                                    <ul>
-                                        {% for benefit in solution.benefits %}
-                                        <li>{{ benefit }}</li>
-                                        {% endfor %}
-                                    </ul>
+                                    <div class="alert alert-success mb-0">
+                                        <strong><i class="fas fa-check-circle"></i> Benefit:</strong> {{ solution.customer_benefit }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -301,30 +291,13 @@
                     <div class="col-lg-6 mb-4">
                         <div class="card card-hover h-100">
                             <div class="card-header bg-primary text-white">
-                                <h5><i class="fas fa-{{ prop.icon }}"></i> {{ prop.title }}</h5>
+                                <h5><i class="fas fa-chart-line"></i> {{ prop.category }}</h5>
                             </div>
                             <div class="card-body">
-                                <p>{{ prop.description }}</p>
-                                {% if prop.metrics %}
-                                <div class="mb-3">
-                                    <strong>Key Metrics:</strong>
-                                    <ul>
-                                        {% for metric in prop.metrics %}
-                                        <li><strong>{{ metric.label }}:</strong> <span class="text-success">{{ metric.improvement }}</span></li>
-                                        {% endfor %}
-                                    </ul>
+                                <div class="alert alert-info mb-3">
+                                    <h6 class="mb-0"><i class="fas fa-dollar-sign"></i> {{ prop.value }}</h6>
                                 </div>
-                                {% endif %}
-                                {% if prop.learn_more %}
-                                <div>
-                                    <strong>Learn more:</strong>
-                                    <ul class="list-unstyled">
-                                        {% for link in prop.learn_more %}
-                                        <li><a href="{{ link.url }}">{{ link.text }}</a></li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endif %}
+                                <p>{{ prop.explanation }}</p>
                             </div>
                         </div>
                     </div>
@@ -338,24 +311,34 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h3 class="text-center mb-4"><i class="fas fa-calculator"></i> ROI Summary</h3>
-                                <div class="row text-center">
+                                <div class="row text-center mb-4">
                                     <div class="col-md-3">
-                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Implementation Time</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-success">{{ business_value.roi_summary.implementation_time }}</div>
+                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Investment</p>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-primary">{{ business_value.roi_summary.investment }}</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Savings</p>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-success">{{ business_value.roi_summary.savings }}</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Net Benefit</p>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-warning">{{ business_value.roi_summary.net_benefit }}</div>
                                     </div>
                                     <div class="col-md-3">
                                         <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Payback Period</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-primary">{{ business_value.roi_summary.payback_period }}</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Annual Savings</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-warning">{{ business_value.roi_summary.annual_savings }}</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Revenue Impact</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-danger">{{ business_value.roi_summary.revenue_impact }}</div>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-danger">{{ business_value.roi_summary.payback_period }}</div>
                                     </div>
                                 </div>
+                                {% if business_value.roi_summary.intangible_benefits %}
+                                <div class="mt-3">
+                                    <h5 class="text-center mb-3">Intangible Benefits</h5>
+                                    <ul class="list-unstyled text-center">
+                                        {% for benefit in business_value.roi_summary.intangible_benefits %}
+                                        <li class="mb-2"><i class="fas fa-check-circle text-success"></i> {{ benefit }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
