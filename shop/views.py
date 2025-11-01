@@ -326,18 +326,38 @@ def ai_chat(request):
             {"role": "user", "content": user_message}
         ]
         
-        # Determine MCP worker endpoint based on mode
-        # Workers are protected by Cloudflare Access with origin IP check
-        # (Django backend IP is allowed, end users go through portals)
+        # Get MCP OAuth tokens (if available)
+        mcp_auth_token_readonly = os.getenv('MCP_OAUTH_TOKEN_READONLY', '')
+        mcp_auth_token_admin = os.getenv('MCP_OAUTH_TOKEN_ADMIN', '')
+        
+        # Determine MCP endpoint based on mode
+        # Use portal URLs with OAuth tokens for Cloudflare Access integration
+        # Falls back to direct worker URLs if tokens not provided
         if mode == 'admin':
             # Admin mode: All 6 tools (read + write)
-            mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
+            if mcp_auth_token_admin:
+                # Use portal URL with OAuth token (enforces Access policy)
+                mcp_server_url = 'https://mcpw.appdemo.oskarcode.com/mcp'
+                mcp_auth_token = mcp_auth_token_admin
+            else:
+                # Fallback to direct worker URL (IP-based access)
+                mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
+                mcp_auth_token = None
+            
             access_level = "ADMIN mode with full access"
             available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
             access_message = "You can view AND update all presentation content."
         else:
             # User mode: Only 2 read-only tools
-            mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
+            if mcp_auth_token_readonly:
+                # Use portal URL with OAuth token (enforces Access policy)
+                mcp_server_url = 'https://mcpr.appdemo.oskarcode.com/mcp'
+                mcp_auth_token = mcp_auth_token_readonly
+            else:
+                # Fallback to direct worker URL (IP-based access)
+                mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
+                mcp_auth_token = None
+            
             access_level = "USER mode with read-only access"
             available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
             access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
@@ -375,6 +395,17 @@ When updating network_advantages, use CONCISE stats only:
 
 Your job: Answer in 3 sentences or less. Period."""
         
+        # Build MCP server configuration
+        mcp_server_config = {
+            'type': 'url',
+            'url': mcp_server_url,
+            'name': 'presentation-manager'
+        }
+        
+        # Add authorization_token if using portal URL with OAuth
+        if mcp_auth_token:
+            mcp_server_config['authorization_token'] = mcp_auth_token
+        
         # Call Claude API with MCP Connector
         response = requests.post(
             'https://api.anthropic.com/v1/messages',
@@ -389,13 +420,7 @@ Your job: Answer in 3 sentences or less. Period."""
                 'max_tokens': 4096,
                 'system': system_prompt,
                 'messages': messages,
-                'mcp_servers': [
-                    {
-                        'type': 'url',
-                        'url': mcp_server_url,  # Direct worker URL (backend allowed via IP check)
-                        'name': 'presentation-manager'
-                    }
-                ]
+                'mcp_servers': [mcp_server_config]
             },
             timeout=60
         )
