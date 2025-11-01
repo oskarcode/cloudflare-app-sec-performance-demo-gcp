@@ -9,7 +9,7 @@
 	],
 	"routes": [
 		{
-			"pattern": "mcpw.devdemo.oskarcode.com/mcp/*",
+			"pattern": "appdemo.oskarcode.com/mcpw/*",
 			"zone_id": "f975338ef7c3fbe41c0bac2f99f458c0"
 		}
 	],

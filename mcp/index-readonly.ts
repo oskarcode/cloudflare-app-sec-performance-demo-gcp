@@ -145,17 +145,17 @@ export default {
 
 		let response: Response;
 
-		// Handle SSE transport (GET requests to /sse or /mcp/sse)
-		if ((url.pathname === "/sse" || url.pathname === "/mcp/sse") && request.method === "GET") {
-			response = await PresentationMCPReadOnly.serveSSE("/mcp/sse").fetch(request, env, ctx);
+		// Handle SSE transport (GET requests to /sse or /mcpr/sse)
+		if ((url.pathname === "/mcpr/sse" || url.pathname === "/sse") && request.method === "GET") {
+			response = await PresentationMCPReadOnly.serveSSE("/mcpr/sse").fetch(request, env, ctx);
 		}
 		// Handle HTTP transport (POST requests)
-		else if ((url.pathname === "/sse" || url.pathname === "/mcp/sse" || url.pathname === "/mcp") && request.method === "POST") {
-			response = await PresentationMCPReadOnly.serve("/mcp/sse").fetch(request, env, ctx);
+		else if ((url.pathname === "/mcpr/sse" || url.pathname === "/mcpr" || url.pathname === "/sse") && request.method === "POST") {
+			response = await PresentationMCPReadOnly.serve("/mcpr/sse").fetch(request, env, ctx);
 		}
 		// Handle message endpoint
-		else if (url.pathname === "/mcp/sse/message" || url.pathname === "/sse/message") {
-			response = await PresentationMCPReadOnly.serveSSE("/mcp/sse").fetch(request, env, ctx);
+		else if (url.pathname === "/mcpr/sse/message" || url.pathname === "/sse/message") {
+			response = await PresentationMCPReadOnly.serveSSE("/mcpr/sse").fetch(request, env, ctx);
 		}
 		// Default response
 		else {
@@ -165,7 +165,7 @@ export default {
 					version: "1.0.0",
 					access: "read_only",
 					tools: ["get_all_sections", "get_presentation_section"],
-					endpoints: "/mcp/sse (GET/POST)",
+					endpoints: "/mcpr/sse (GET/POST)",
 				}),
 				{ 
 					status: 200,
