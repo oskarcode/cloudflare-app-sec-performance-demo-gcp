@@ -412,28 +412,37 @@ Your job: Answer in 3 sentences or less. Period."""
                 'details': result.get('error', {})
             }, status=400)
         
-        # Extract response text from Claude
+        # Extract response text from Claude and check for tool usage
         response_text = ""
         tool_used = False
+        text_blocks = []
         
         if 'content' in result:
             for block in result['content']:
                 if block.get('type') == 'text':
                     response_text += block.get('text', '')
+                    text_blocks.append(block)
                 elif 'tool' in block.get('type', ''):
                     tool_used = True
         
         # Build conversation history for next turn
+        # IMPORTANT: Only include text blocks, not tool_use blocks
+        # MCP connector handles tool execution separately, and including tool_use
+        # without tool_result blocks causes API errors
         assistant_message = {
             'role': 'assistant',
-            'content': result.get('content', [])
+            'content': text_blocks if text_blocks else [{'type': 'text', 'text': response_text}]
         }
+        
+        # If tools were used, start fresh conversation to avoid tool_use/tool_result errors
+        # MCP handles tool execution internally, so we don't need to track it
+        conversation = messages + [assistant_message] if not tool_used else [messages[-1], assistant_message]
         
         return JsonResponse({
             'success': True,
             'response': response_text,
             'tool_used': tool_used,
-            'conversation': messages + [assistant_message],
+            'conversation': conversation,
             'usage': result.get('usage', {})
         })
     
