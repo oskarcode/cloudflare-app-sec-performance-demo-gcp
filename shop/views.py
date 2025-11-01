@@ -330,16 +330,22 @@ def ai_chat(request):
         if mode == 'admin':
             # Admin mode: All 6 tools (read + write)
             mcp_server_url = 'https://appdemo.oskarcode.com/mcpw'
-            access_level = "full access with read and write capabilities"
+            access_level = "ADMIN mode with full access"
+            available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
+            access_message = "You can view AND update all presentation content."
         else:
             # User mode: Only 2 read-only tools
             mcp_server_url = 'https://appdemo.oskarcode.com/mcpr'
-            access_level = "read-only access"
+            access_level = "USER mode with read-only access"
+            available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
+            access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
         
         # System prompt
         system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
 
-CURRENT MODE: {mode.upper()} - You have {access_level}.
+CURRENT MODE: {access_level}
+AVAILABLE TOOLS: {available_tools}
+ACCESS: {access_message}
 
 CRITICAL RULES - READ CAREFULLY:
 1. Maximum 3 sentences per response
@@ -347,7 +353,7 @@ CRITICAL RULES - READ CAREFULLY:
 3. NO markdown formatting (no **, ##, ###)
 4. Use plain text only
 5. Get to the point in first sentence
-6. If user asks to update and you're in USER mode, inform them: "I can only view content. Switch to Admin mode to make updates."
+6. If user asks to update/change/edit content in USER mode, IMMEDIATELY respond: "I'm in User mode (read-only). I can only view content, not update it. Click the User button at the top to switch to Admin mode for write access. Your available tools: get_all_sections, get_presentation_section."
 
 When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
 When updating: "Done. Changed [X] to [Y]."
