@@ -368,11 +368,15 @@
             updateModeUI();
             saveMode();
             
+            // Clear conversation history to prevent old mode context from persisting
+            conversationHistory = [];
+            saveChatHistory();
+            
             // Show notification
             const modeText = currentMode === 'admin' ? 
                 'Admin mode: All tools available (6 tools)' : 
                 'User mode: Read-only access (2 tools)';
-            addMessage('assistant', `✨ Switched to ${modeText}`, false);
+            addMessage('assistant', `✨ Switched to ${modeText}. Previous conversation cleared.`, false);
         });
         
         // Toggle widget
