@@ -7,7 +7,6 @@
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
-	"workers_dev": true,
 	"routes": [
 		{
 			"pattern": "appdemo.oskarcode.com/mcp/*",
@@ -20,12 +19,6 @@
 				"PresentationMCP"
 			],
 			"tag": "v1"
-		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "OAUTH_KV",
-			"id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 		}
 	],
 	"durable_objects": {
