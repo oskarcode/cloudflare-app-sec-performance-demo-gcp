@@ -400,8 +400,17 @@ Your job: Answer in 3 sentences or less. Period."""
             timeout=60
         )
         
-        response.raise_for_status()
+        # Check response status and parse
         result = response.json()
+        
+        # Check for API errors
+        if result.get('type') == 'error':
+            error_msg = result.get('error', {}).get('message', 'Unknown error')
+            error_type = result.get('error', {}).get('type', 'unknown')
+            return JsonResponse({
+                'error': f'Anthropic API Error ({error_type}): {error_msg}',
+                'details': result.get('error', {})
+            }, status=400)
         
         # Extract response text from Claude
         response_text = ""
@@ -428,9 +437,20 @@ Your job: Answer in 3 sentences or less. Period."""
             'usage': result.get('usage', {})
         })
     
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except json.JSONDecodeError as e:
+        return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
     except requests.exceptions.RequestException as e:
-        return JsonResponse({'error': f'API request failed: {str(e)}'}, status=500)
+        # Try to get error details from response
+        error_details = None
+        try:
+            if hasattr(e, 'response') and e.response is not None:
+                error_details = e.response.json()
+        except:
+            pass
+        
+        return JsonResponse({
+            'error': f'API request failed: {str(e)}',
+            'details': error_details
+        }, status=500)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
