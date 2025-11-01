@@ -316,6 +316,7 @@ def ai_chat(request):
         data = json.loads(request.body)
         user_message = data.get('message', '')
         conversation_history = data.get('history', [])
+        mode = data.get('mode', 'user')  # 'admin' or 'user'
         
         if not user_message:
             return JsonResponse({'error': 'Message is required'}, status=400)
@@ -325,8 +326,20 @@ def ai_chat(request):
             {"role": "user", "content": user_message}
         ]
         
+        # Determine MCP endpoint based on mode
+        if mode == 'admin':
+            # Admin mode: All 6 tools (read + write)
+            mcp_server_url = 'https://appdemo.oskarcode.com/mcpw'
+            access_level = "full access with read and write capabilities"
+        else:
+            # User mode: Only 2 read-only tools
+            mcp_server_url = 'https://appdemo.oskarcode.com/mcpr'
+            access_level = "read-only access"
+        
         # System prompt
-        system_prompt = """You are a brief, direct AI assistant for Cloudflare demo presentations.
+        system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
+
+CURRENT MODE: {mode.upper()} - You have {access_level}.
 
 CRITICAL RULES - READ CAREFULLY:
 1. Maximum 3 sentences per response
@@ -334,6 +347,7 @@ CRITICAL RULES - READ CAREFULLY:
 3. NO markdown formatting (no **, ##, ###)
 4. Use plain text only
 5. Get to the point in first sentence
+6. If user asks to update and you're in USER mode, inform them: "I can only view content. Switch to Admin mode to make updates."
 
 When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
 When updating: "Done. Changed [X] to [Y]."
@@ -352,9 +366,6 @@ When updating network_advantages, use CONCISE stats only:
 - direct_connections: "13,000 networks" (NOT full sentence about ISPs)
 
 Your job: Answer in 3 sentences or less. Period."""
-
-        # Get MCP server URL
-        mcp_server_url = os.getenv('MCP_SERVER_URL', 'https://appdemo.oskarcode.com/mcp')
         
         # Call Claude API with MCP Connector
         response = requests.post(
