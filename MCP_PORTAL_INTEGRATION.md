@@ -1,20 +1,20 @@
-# MCP Portal Integration with Cloudflare Access
+# MCP Integration with Cloudflare Workers
 
 ## Overview
-The AI Assistant now connects to MCP servers through Cloudflare MCP Portals with Access policies for enhanced security and centralized management.
+The AI Assistant connects to MCP servers running as Cloudflare Workers, with IP-based access control through Cloudflare Access.
 
-## Portal URLs
+## MCP Worker Endpoints
 
-### Read-Only Portal (User Mode)
-- **URL:** `https://mcpr.appdemo.oskarcode.com/mcp`
-- **Access:** Protected by Cloudflare Access policy
+### Read-Only Worker (User Mode)
+- **URL:** `https://appdemo.oskarcode.com/mcpr/sse`
+- **Access:** IP-based via Cloudflare Access
 - **Tools:** 2 read-only tools
   - `get_all_sections`
   - `get_presentation_section`
 
-### Admin Portal (Admin Mode)
-- **URL:** `https://mcpw.appdemo.oskarcode.com/mcp`
-- **Access:** Protected by Cloudflare Access policy (stricter controls)
+### Admin Worker (Admin Mode)
+- **URL:** `https://appdemo.oskarcode.com/mcpw/sse`
+- **Access:** IP-based via Cloudflare Access
 - **Tools:** All 6 tools (2 read + 4 write)
   - `get_all_sections`
   - `get_presentation_section`
@@ -23,95 +23,77 @@ The AI Assistant now connects to MCP servers through Cloudflare MCP Portals with
   - `update_how_cloudflare_help`
   - `update_business_value`
 
+## MCP Portals (For End Users)
+
+Portal URLs are available for end-user MCP clients (Claude Desktop, MCP Inspector, etc.):
+- **Read-Only Portal:** `https://mcpr.appdemo.oskarcode.com/mcp`
+- **Admin Portal:** `https://mcpw.appdemo.oskarcode.com/mcp`
+
+**Note:** Django backend uses direct worker URLs for simplicity. Portals are for manual client access.
+
 ## Architecture
 
-### Backend Flow (AI Assistant)
 ```
-┌─────────────────┐
-│  AI Assistant   │
-│  (Django App)   │
-└────────┬────────┘
+┌─────────────────────────────────────────┐
+│         User's Browser                   │
+│    (http://34.86.12.252)                │
+└────────┬────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│      Django AI Assistant                │
+│      - Mode toggle (User/Admin)          │
+│      - Chat interface                    │
+│      - Conversation history              │
+└────────┬────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────┐
 │     Claude API (MCP Connector)          │
+│     api.anthropic.com/v1/messages       │
 └────────┬────────────────────┬───────────┘
          │                    │
          ▼                    ▼
 ┌─────────────────┐  ┌─────────────────┐
 │ Cloudflare      │  │ Cloudflare      │
-│ Access Check    │  │ Access Check    │
-│ (Origin IP OK)  │  │ (Origin IP OK)  │
+│ Access (IP)     │  │ Access (IP)     │
 └────────┬────────┘  └────────┬────────┘
          │                    │
          ▼                    ▼
 ┌─────────────────┐  ┌─────────────────┐
 │  MCP Worker     │  │  MCP Worker     │
 │  (Read-Only)    │  │  (Read/Write)   │
-│  /mcpr/sse      │  │  /mcpw/sse      │
+│  mcpr/sse       │  │  mcpw/sse       │
 └─────────────────┘  └─────────────────┘
 ```
 
 **Key Points:**
-- Django backend connects directly to worker URLs
-- Access policy allows backend via origin IP check
-- No portal needed for programmatic access
-
-### End-User Flow (MCP Clients)
-```
-┌─────────────────┐
-│  Claude Desktop │
-│  or MCP Client  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  MCP Portal     │
-│  (mcpr/mcpw)    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Cloudflare      │
-│ Access Login    │
-│ (IdP Auth)      │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  MCP Workers    │
-│  (Read/Write)   │
-└─────────────────┘
-```
-
-**Key Points:**
-- End users access via portal URLs
-- Portal handles authentication and tool filtering
-- Provides observability and audit logs
+- Simple IP-based access control
+- Direct connection to MCP workers
+- Mode determines which worker is used
+- No OAuth token complexity
 
 ## Benefits
 
-### 1. **Centralized Access Control**
-- All MCP server access goes through Cloudflare Access
-- Policies managed in Cloudflare Zero Trust dashboard
-- Single source of truth for permissions
+### 1. **Simple Access Control**
+- IP-based access via Cloudflare Access
+- Backend server IP is allowed
+- No token management required
 
-### 2. **Observability**
-- Portal logs show all tool usage
-- Track which tools are being called
-- Monitor request duration and status
-- View logs per portal or per server
+### 2. **Dual Mode Support**
+- User mode: Read-only tools (safe exploration)
+- Admin mode: Full write access (content updates)
+- Easy toggle between modes
 
-### 3. **Granular Tool Control**
-- Enable/disable specific tools per portal
-- Customize available tools for different use cases
-- Separate read-only vs read/write access
+### 3. **MCP Integration**
+- Claude's native MCP connector
+- Tool discovery and execution handled automatically
+- Clean conversation history management
 
-### 4. **Security**
-- Identity-based access control via IdP
-- No hardcoded credentials in application
-- OAuth-based authentication
-- Audit trail of all API calls
+### 4. **Cloudflare Workers**
+- Fast, globally distributed
+- Serverless architecture
+- Automatic scaling
 
 ## Configuration in Django
 
@@ -137,46 +119,26 @@ Claude's MCP connector handles:
 - Request routing
 - Response parsing
 
-## Authentication Considerations
+## Access Control
 
-### Current Setup: Origin IP Check ✅
-- **Access Policy:** Origin IP check allows Django backend
-- **No Additional Auth Required:** Backend IP is in the allow list
-- **Direct Worker Access:** Backend connects to worker URLs directly
-- **Portal URLs:** Reserved for end-user MCP clients only
+### IP-Based Authentication
+- Django backend IP is allowed in Cloudflare Access policy
+- No additional authentication required
+- Simple and reliable for backend services
 
 ### How It Works:
-1. Django backend makes request to Anthropic API
-2. Anthropic's MCP connector connects to worker URL
-3. Cloudflare Access checks origin IP
-4. Backend IP is allowed → Request proceeds
-5. Worker processes request and returns tools
-
-### If You Need Different Auth:
-
-**Option 1: Service Token** (for stricter security)
-   ```python
-   headers = {
-       'CF-Access-Client-Id': os.getenv('CF_SERVICE_TOKEN_ID'),
-       'CF-Access-Client-Secret': os.getenv('CF_SERVICE_TOKEN_SECRET'),
-   }
-   ```
-
-**Option 2: IP Allowlist** (current approach)
-   - Backend IP added to Access policy
-   - No code changes required
-   - Simple and effective for known backend IPs
-
-**Option 3: Custom Header**
-   - Add custom header validation in Access policy
-   - Backend sends secret header
-   - More flexible than IP-based auth
+1. User interacts with Django AI Assistant
+2. Django makes request to Anthropic API with MCP connector
+3. Anthropic's MCP connector connects to worker URL
+4. Cloudflare Access checks origin IP
+5. Backend IP is allowed → Request proceeds
+6. Worker processes request and returns tools
+7. Response flows back through Django to user
 
 ## Testing
 
-### Test Read-Only Portal (User Mode)
+### Test User Mode (Read-Only)
 ```bash
-# Try viewing content (should work)
 curl -X POST http://34.86.12.252/api/ai-chat/ \
   -H "Content-Type: application/json" \
   -d '{
@@ -184,24 +146,14 @@ curl -X POST http://34.86.12.252/api/ai-chat/ \
     "mode": "user",
     "history": []
   }'
-
-# Try updating (should be blocked)
-curl -X POST http://34.86.12.252/api/ai-chat/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "Update the business value",
-    "mode": "user",
-    "history": []
-  }'
 ```
 
-### Test Admin Portal (Admin Mode)
+### Test Admin Mode (Read/Write)
 ```bash
-# Try updating (should work if auth is configured)
 curl -X POST http://34.86.12.252/api/ai-chat/ \
   -H "Content-Type: application/json" \
   -d '{
-    "message": "Update the business value",
+    "message": "Update the business value to highlight security",
     "mode": "admin",
     "history": []
   }'
@@ -209,51 +161,43 @@ curl -X POST http://34.86.12.252/api/ai-chat/ \
 
 ## Monitoring
 
-### View Portal Logs
-1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com/)
-2. Navigate to **Access controls** > **AI controls**
-3. Find your portal → **Edit** → **Logs**
+### Worker Logs
+- View worker logs in Cloudflare dashboard
+- Navigate to Workers & Pages → Your worker → Logs
+- See all MCP tool calls and responses
 
-### Log Fields
-- **Time**: When the request was made
-- **Status**: Success/failure
-- **Server**: Which MCP server handled it
-- **Capability**: Which tool was used
-- **Duration**: Processing time in ms
+### Django Logs
+```bash
+# SSH to server
+gcloud compute ssh oskar-appdemo-se --zone=us-east4-b
+
+# View nginx logs
+sudo tail -f /var/log/nginx/access.log
+```
 
 ## Troubleshooting
 
+### Issue: "API request failed: 400"
+**Solutions:**
+- Check conversation history isn't causing tool_use/tool_result mismatch
+- Switch modes to clear conversation history
+- Verify MCP worker URLs are correct
+
 ### Issue: "MCP server connection failed"
-**Cause:** Cloudflare Access blocking the request
-**Solution:** 
-1. Check Access policy allows backend service
-2. Add service token if needed
-3. Verify portal URL is correct
+**Solutions:**
+- Verify backend server IP is in Cloudflare Access allowlist
+- Check worker URLs are accessible
+- Test with curl from server
 
-### Issue: "Tool not available"
-**Cause:** Tool disabled in portal settings
-**Solution:**
-1. Go to Zero Trust dashboard
-2. Edit the portal
-3. Enable the required tool
-
-### Issue: "Authentication required"
-**Cause:** Backend needs auth credentials
-**Solution:**
-1. Generate Cloudflare service token
-2. Add to Django environment variables
-3. Pass in request headers
-
-## Next Steps
-
-1. **Test the integration** with current setup
-2. **Add service token auth** if Cloudflare Access blocks requests
-3. **Monitor portal logs** to verify tool usage
-4. **Adjust Access policies** based on requirements
-5. **Document any auth headers** needed for production
+### Issue: Mode toggle not working properly
+**Solutions:**
+- Refresh the page after deployment
+- Clear browser cache
+- Check browser console for errors
 
 ## References
 
-- [Cloudflare MCP Portal Documentation](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/mcp-portals/)
-- [Secure MCP Servers with Access](https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/saas-mcp/)
-- [Cloudflare Access Policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Claude MCP Connector](https://docs.claude.com/en/docs/agents-and-tools/mcp-connector)
+- [Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/)

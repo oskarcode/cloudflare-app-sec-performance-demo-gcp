@@ -22,6 +22,39 @@ This demo site showcases how Cloudflare's security features protect against comm
 - **Rate Limiting** - API endpoints for rate limiting demonstration
 - **DDoS Simulation** - Load testing endpoints
 
+## 🤖 AI Assistant with MCP Integration
+
+The application includes an intelligent AI assistant powered by **Claude with Model Context Protocol (MCP)** for managing presentation content.
+
+### Features
+- **Dual Mode Operation**
+  - **User Mode**: Read-only access (explore content safely)
+  - **Admin Mode**: Full read/write access (update presentation)
+- **MCP Integration**: Direct connection to Cloudflare Workers running MCP servers
+- **Smart Context**: Conversation history management per mode
+- **Access Control**: IP-based authentication via Cloudflare Access
+
+### MCP Architecture
+```
+User Browser → Django → Claude API (MCP Connector) → Cloudflare Workers (MCP)
+```
+
+- **Read-Only Worker**: `https://appdemo.oskarcode.com/mcpr/sse` (2 tools)
+- **Admin Worker**: `https://appdemo.oskarcode.com/mcpw/sse` (6 tools)
+
+### Available Tools
+**Read Tools** (User + Admin):
+- `get_all_sections` - Retrieve all presentation sections
+- `get_presentation_section` - Get specific section content
+
+**Write Tools** (Admin only):
+- `update_case_background` - Update business context
+- `update_architecture` - Update architecture diagrams
+- `update_how_cloudflare_help` - Update solutions
+- `update_business_value` - Update ROI and value props
+
+See [MCP_PORTAL_INTEGRATION.md](MCP_PORTAL_INTEGRATION.md) for detailed documentation.
+
 ## 🏗️ Architecture
 
 **Current Deployment:** Google Cloud Platform VM with Traditional Django + Nginx
