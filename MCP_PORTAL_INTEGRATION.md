@@ -25,6 +25,7 @@ The AI Assistant now connects to MCP servers through Cloudflare MCP Portals with
 
 ## Architecture
 
+### Backend Flow (AI Assistant)
 ```
 ┌─────────────────┐
 │  AI Assistant   │
@@ -38,24 +39,55 @@ The AI Assistant now connects to MCP servers through Cloudflare MCP Portals with
          │                    │
          ▼                    ▼
 ┌─────────────────┐  ┌─────────────────┐
-│  MCP Portal     │  │  MCP Portal     │
-│  (Read-Only)    │  │  (Admin)        │
-│  mcpr.*         │  │  mcpw.*         │
-└────────┬────────┘  └────────┬────────┘
-         │                    │
-         ▼                    ▼
-┌─────────────────┐  ┌─────────────────┐
 │ Cloudflare      │  │ Cloudflare      │
-│ Access Policy   │  │ Access Policy   │
-│ (Less strict)   │  │ (More strict)   │
+│ Access Check    │  │ Access Check    │
+│ (Origin IP OK)  │  │ (Origin IP OK)  │
 └────────┬────────┘  └────────┬────────┘
          │                    │
          ▼                    ▼
 ┌─────────────────┐  ┌─────────────────┐
 │  MCP Worker     │  │  MCP Worker     │
 │  (Read-Only)    │  │  (Read/Write)   │
+│  /mcpr/sse      │  │  /mcpw/sse      │
 └─────────────────┘  └─────────────────┘
 ```
+
+**Key Points:**
+- Django backend connects directly to worker URLs
+- Access policy allows backend via origin IP check
+- No portal needed for programmatic access
+
+### End-User Flow (MCP Clients)
+```
+┌─────────────────┐
+│  Claude Desktop │
+│  or MCP Client  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  MCP Portal     │
+│  (mcpr/mcpw)    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Cloudflare      │
+│ Access Login    │
+│ (IdP Auth)      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  MCP Workers    │
+│  (Read/Write)   │
+└─────────────────┘
+```
+
+**Key Points:**
+- End users access via portal URLs
+- Portal handles authentication and tool filtering
+- Provides observability and audit logs
 
 ## Benefits
 
@@ -87,25 +119,42 @@ The Django AI assistant (`shop/views.py`) routes requests based on mode:
 
 ```python
 if mode == 'admin':
-    mcp_server_url = 'https://mcpw.appdemo.oskarcode.com/mcp'
+    # Direct worker URL - backend allowed via origin IP check
+    mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
 else:
-    mcp_server_url = 'https://mcpr.appdemo.oskarcode.com/mcp'
+    # Direct worker URL - backend allowed via origin IP check
+    mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
 ```
 
+**Why Direct URLs, Not Portals?**
+- Anthropic's MCP connector requires direct worker URLs
+- Portal URLs are for end-user MCP clients (Claude Desktop, etc.)
+- Backend is allowed by Cloudflare Access via origin IP check
+- No additional authentication needed for backend
+
 Claude's MCP connector handles:
-- Portal authentication
-- Tool discovery
+- Tool discovery from worker
 - Request routing
+- Response parsing
 
 ## Authentication Considerations
 
-### Current Setup
-The Django backend uses Claude's MCP connector, which handles portal authentication.
+### Current Setup: Origin IP Check ✅
+- **Access Policy:** Origin IP check allows Django backend
+- **No Additional Auth Required:** Backend IP is in the allow list
+- **Direct Worker Access:** Backend connects to worker URLs directly
+- **Portal URLs:** Reserved for end-user MCP clients only
 
-### Potential Requirements
-If Cloudflare Access blocks backend requests, you may need:
+### How It Works:
+1. Django backend makes request to Anthropic API
+2. Anthropic's MCP connector connects to worker URL
+3. Cloudflare Access checks origin IP
+4. Backend IP is allowed → Request proceeds
+5. Worker processes request and returns tools
 
-1. **Service Token** (for service-to-service auth):
+### If You Need Different Auth:
+
+**Option 1: Service Token** (for stricter security)
    ```python
    headers = {
        'CF-Access-Client-Id': os.getenv('CF_SERVICE_TOKEN_ID'),
@@ -113,13 +162,15 @@ If Cloudflare Access blocks backend requests, you may need:
    }
    ```
 
-2. **Bypass for Backend Services**:
-   - Add Django app's IP to Access policy bypass rules
-   - Use service authentication in Cloudflare Access
+**Option 2: IP Allowlist** (current approach)
+   - Backend IP added to Access policy
+   - No code changes required
+   - Simple and effective for known backend IPs
 
-3. **API Token Authentication**:
-   - Generate Cloudflare API tokens for programmatic access
-   - Add to request headers
+**Option 3: Custom Header**
+   - Add custom header validation in Access policy
+   - Backend sends secret header
+   - More flexible than IP-based auth
 
 ## Testing
 

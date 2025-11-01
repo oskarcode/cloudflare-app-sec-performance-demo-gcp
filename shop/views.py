@@ -326,17 +326,18 @@ def ai_chat(request):
             {"role": "user", "content": user_message}
         ]
         
-        # Determine MCP portal endpoint based on mode
-        # Portal URLs are protected by Cloudflare Access policies
+        # Determine MCP worker endpoint based on mode
+        # Workers are protected by Cloudflare Access with origin IP check
+        # (Django backend IP is allowed, end users go through portals)
         if mode == 'admin':
-            # Admin mode: All 6 tools (read + write) via admin portal
-            mcp_server_url = 'https://mcpw.appdemo.oskarcode.com/mcp'
+            # Admin mode: All 6 tools (read + write)
+            mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
             access_level = "ADMIN mode with full access"
             available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
             access_message = "You can view AND update all presentation content."
         else:
-            # User mode: Only 2 read-only tools via readonly portal
-            mcp_server_url = 'https://mcpr.appdemo.oskarcode.com/mcp'
+            # User mode: Only 2 read-only tools
+            mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
             access_level = "USER mode with read-only access"
             available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
             access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
@@ -391,7 +392,7 @@ Your job: Answer in 3 sentences or less. Period."""
                 'mcp_servers': [
                     {
                         'type': 'url',
-                        'url': mcp_server_url,  # Portal URL handles routing internally
+                        'url': mcp_server_url,  # Direct worker URL (backend allowed via IP check)
                         'name': 'presentation-manager'
                     }
                 ]
