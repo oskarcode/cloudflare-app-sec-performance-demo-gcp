@@ -187,7 +187,15 @@
                                     {% for mapping in architecture.problems_mapping %}
                                     <tr>
                                         <td><strong>{{ mapping.problem }}</strong></td>
-                                        <td>{{ mapping.technical_cause }}</td>
+                                        <td>{{ mapping.current_solution }}
+                                            {% if mapping.limitations %}
+                                            <ul class="mt-2">
+                                                {% for limitation in mapping.limitations %}
+                                                <li>{{ limitation }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% endif %}
+                                        </td>
                                         <td><span class="badge bg-success">{{ mapping.cloudflare_solution }}</span></td>
                                     </tr>
                                     {% endfor %}
@@ -207,7 +215,7 @@
                             </div>
                             <div class="card-body">
                                 <ol class="list-group list-group-numbered">
-                                    {% for step in architecture.traffic_flow.before_cloudflare %}
+                                    {% for step in architecture.traffic_flow.before %}
                                     <li class="list-group-item">{{ step }}</li>
                                     {% endfor %}
                                 </ol>
@@ -221,7 +229,7 @@
                             </div>
                             <div class="card-body">
                                 <ol class="list-group list-group-numbered">
-                                    {% for step in architecture.traffic_flow.after_cloudflare %}
+                                    {% for step in architecture.traffic_flow.after %}
                                     <li class="list-group-item">{{ step }}</li>
                                     {% endfor %}
                                 </ol>
@@ -271,7 +279,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Network Capacity</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500; color: #f38020;">{{ how_cloudflare_help.network_advantages.network_capacity }}</div>
+                                        <div style="font-size: 1.1rem; font-weight: 500; color: #f38020;">{{ how_cloudflare_help.network_advantages.capacity }}</div>
                                     </div>
                                     <div class="col-md-3">
                                         <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Global Locations</p>
@@ -279,7 +287,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Direct Connections</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500; color: #f38020;">{{ how_cloudflare_help.network_advantages.direct_connections }}</div>
+                                        <div style="font-size: 1.1rem; font-weight: 500; color: #f38020;">{{ how_cloudflare_help.network_advantages.connections }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -323,32 +331,22 @@
                                 <h3 class="text-center mb-4"><i class="fas fa-calculator"></i> ROI Summary</h3>
                                 <div class="row text-center mb-4">
                                     <div class="col-md-3">
-                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Investment</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-primary">{{ business_value.roi_summary.investment }}</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Savings</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-success">{{ business_value.roi_summary.savings }}</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Net Benefit</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-warning">{{ business_value.roi_summary.net_benefit }}</div>
+                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Implementation Time</p>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-primary">{{ business_value.roi_summary.implementation_time }}</div>
                                     </div>
                                     <div class="col-md-3">
                                         <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Payback Period</p>
-                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-danger">{{ business_value.roi_summary.payback_period }}</div>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-success">{{ business_value.roi_summary.payback_period }}</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Annual Savings</p>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-warning">{{ business_value.roi_summary.annual_savings }}</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p class="text-uppercase fw-bold mb-2" style="font-size: 0.9rem; color: #555;">Revenue Impact</p>
+                                        <div style="font-size: 1.1rem; font-weight: 500;" class="text-danger">{{ business_value.roi_summary.revenue_impact }}</div>
                                     </div>
                                 </div>
-                                {% if business_value.roi_summary.intangible_benefits %}
-                                <div class="mt-3">
-                                    <h5 class="text-center mb-3">Intangible Benefits</h5>
-                                    <ul class="list-unstyled text-center">
-                                        {% for benefit in business_value.roi_summary.intangible_benefits %}
-                                        <li class="mb-2"><i class="fas fa-check-circle text-success"></i> {{ benefit }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
