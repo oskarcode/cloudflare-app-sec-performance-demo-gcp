@@ -164,6 +164,12 @@ env.production
 # Credentials and sensitive configuration
 credentials.env
 credentials.local.env
-*.credentialsnode_modules/
+*.credentials
+
+# MCP OAuth tokens (auto-managed)
+.mcp_tokens_*.json
+
+# Node modules
+node_modules/
 package-lock.json
 test.txt
