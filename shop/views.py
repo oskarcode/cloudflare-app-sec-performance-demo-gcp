@@ -7,7 +7,6 @@ from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import Product, PresentationSection
-from .mcp_token_manager import get_token_manager
 import json
 import requests
 
@@ -292,14 +291,15 @@ def api_presentation_section_update(request, section_type):
 
 
 # =====================================================
-# AI CHAT WITH MCP CONNECTOR
+# AI CHAT WITH MCP CONNECTOR - USER MODE (READ-ONLY)
 # =====================================================
 
 @csrf_exempt
-def ai_chat(request):
+def ai_chat_user(request):
     """
-    AI chat endpoint that integrates Claude with MCP connector.
-    Allows natural language editing of presentation content.
+    AI chat endpoint for USER mode (read-only access).
+    Uses direct MCP worker URL - no authentication required (IP-based access).
+    Can be accessed by anyone.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required'}, status=405)
@@ -317,7 +317,6 @@ def ai_chat(request):
         data = json.loads(request.body)
         user_message = data.get('message', '')
         conversation_history = data.get('history', [])
-        mode = data.get('mode', 'user')  # 'admin' or 'user'
         
         if not user_message:
             return JsonResponse({'error': 'Message is required'}, status=400)
@@ -327,38 +326,11 @@ def ai_chat(request):
             {"role": "user", "content": user_message}
         ]
         
-        # Determine MCP endpoint based on mode
-        # Use Cloudflare MCP Portal URLs with OAuth authentication for both modes
-        if mode == 'admin':
-            # Admin mode: All 6 tools (read + write)
-            mcp_server_url = 'https://mcpw.appdemo.oskarcode.com/mcp'
-            token_manager = get_token_manager('admin')
-            oauth_token = token_manager.get_access_token()
-            
-            if not oauth_token:
-                return JsonResponse({
-                    'error': 'MCP authentication failed. Please re-authenticate via MCP Inspector and update tokens.',
-                    'details': 'OAuth token unavailable or refresh failed'
-                }, status=500)
-            
-            access_level = "ADMIN mode with full access"
-            available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
-            access_message = "You can view AND update all presentation content."
-        else:
-            # User mode: Only 2 read-only tools
-            mcp_server_url = 'https://mcpr.appdemo.oskarcode.com/mcp'
-            token_manager = get_token_manager('readonly')
-            oauth_token = token_manager.get_access_token()
-            
-            if not oauth_token:
-                return JsonResponse({
-                    'error': 'MCP authentication failed. Please re-authenticate via MCP Inspector and update tokens.',
-                    'details': 'OAuth token unavailable or refresh failed'
-                }, status=500)
-            
-            access_level = "USER mode with read-only access"
-            available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
-            access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
+        # User mode: Direct worker URL, read-only tools (2 tools)
+        mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
+        access_level = "USER mode with read-only access"
+        available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
+        access_message = "You can ONLY VIEW content. You CANNOT update anything."
         
         # System prompt
         system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
@@ -373,23 +345,22 @@ CRITICAL RULES - READ CAREFULLY:
 3. NO markdown formatting (no **, ##, ###)
 4. Use plain text only
 5. Get to the point in first sentence
-6. If user asks to update/change/edit content in USER mode, IMMEDIATELY respond: "I'm in User mode (read-only). I can only view content, not update it. Click the User button at the top to switch to Admin mode for write access. Your available tools: get_all_sections, get_presentation_section."
+6. If user asks to update/change/edit content, respond: "I'm in User mode (read-only). I can only view content, not update it. To make changes, you need Admin mode access."
 
 When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
-When updating: "Done. Changed [X] to [Y]."
 
 GOOD (3 sentences max):
 "ToTheMoon.com is a space collectibles site with $5K/month bandwidth costs and no security. They need Cloudflare to cut costs and add WAF protection. Want to see the architecture or solutions?"
 
 BAD (too long):
-"You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally. They're a mid-sized business (~50-100 employees, $10-25M revenue)... [continues with multiple paragraphs]"
+"You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally..."
 
 IMPORTANT - Network Advantages Format:
-When updating network_advantages, use CONCISE stats only:
-- latency: "~50ms from 95% of population" (NOT full sentence)
-- network_capacity: "405 Tbps" (NOT description of what it consists of)
-- locations: "330 cities in 125+ countries" (short version)
-- direct_connections: "13,000 networks" (NOT full sentence about ISPs)
+When showing network_advantages, use CONCISE stats only:
+- latency: "~50ms from 95% of population"
+- network_capacity: "405 Tbps"
+- locations: "330 cities in 125+ countries"
+- direct_connections: "13,000 networks"
 
 Your job: Answer in 3 sentences or less. Period."""
         
@@ -411,8 +382,7 @@ Your job: Answer in 3 sentences or less. Period."""
                     {
                         'type': 'url',
                         'url': mcp_server_url,
-                        'name': 'cloudflare-portal',
-                        'authorization_token': oauth_token
+                        'name': 'presentation-readonly'
                     }
                 ]
             },
@@ -427,58 +397,182 @@ Your job: Answer in 3 sentences or less. Period."""
             error_msg = result.get('error', {}).get('message', 'Unknown error')
             error_type = result.get('error', {}).get('type', 'unknown')
             return JsonResponse({
-                'error': f'Anthropic API Error ({error_type}): {error_msg}',
-                'details': result.get('error', {})
-            }, status=400)
+                'error': f'Anthropic API Error ({error_type}): {error_msg}'
+            }, status=500)
         
-        # Extract response text from Claude and check for tool usage
-        response_text = ""
+        # Extract assistant response
+        assistant_message = ''
         tool_used = False
-        text_blocks = []
         
-        if 'content' in result:
-            for block in result['content']:
-                if block.get('type') == 'text':
-                    response_text += block.get('text', '')
-                    text_blocks.append(block)
-                elif 'tool' in block.get('type', ''):
-                    tool_used = True
-        
-        # Build conversation history for next turn
-        # IMPORTANT: Only include text blocks, not tool_use blocks
-        # MCP connector handles tool execution separately, and including tool_use
-        # without tool_result blocks causes API errors
-        assistant_message = {
-            'role': 'assistant',
-            'content': text_blocks if text_blocks else [{'type': 'text', 'text': response_text}]
-        }
-        
-        # If tools were used, start fresh conversation to avoid tool_use/tool_result errors
-        # MCP handles tool execution internally, so we don't need to track it
-        conversation = messages + [assistant_message] if not tool_used else [messages[-1], assistant_message]
+        for content_block in result.get('content', []):
+            if content_block.get('type') == 'text':
+                assistant_message += content_block.get('text', '')
+            elif content_block.get('type') == 'tool_use':
+                tool_used = True
         
         return JsonResponse({
             'success': True,
-            'response': response_text,
+            'response': assistant_message,
             'tool_used': tool_used,
-            'conversation': conversation,
-            'usage': result.get('usage', {})
+            'mode': 'user'
         })
     
-    except json.JSONDecodeError as e:
-        return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
-    except requests.exceptions.RequestException as e:
-        # Try to get error details from response
-        error_details = None
-        try:
-            if hasattr(e, 'response') and e.response is not None:
-                error_details = e.response.json()
-        except:
-            pass
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {'error': 'Invalid JSON in request body'},
+            status=400
+        )
+    except requests.RequestException as e:
+        return JsonResponse(
+            {'error': f'Network error: {str(e)}'},
+            status=500
+        )
+    except Exception as e:
+        return JsonResponse(
+            {'error': f'Server error: {str(e)}'},
+            status=500
+        )
+
+
+# =====================================================
+# AI CHAT WITH MCP CONNECTOR - ADMIN MODE (READ/WRITE)
+# =====================================================
+
+@csrf_exempt
+def ai_chat_admin(request):
+    """
+    AI chat endpoint for ADMIN mode (full read/write access).
+    Uses direct MCP worker URL - no OAuth required (IP-based access).
+    PROTECT THIS ENDPOINT with Cloudflare Access policy!
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required'}, status=405)
+    
+    try:
+        # Get API key from environment
+        import os
+        api_key = os.getenv('CLAUDE_API_KEY')
+        if not api_key:
+            return JsonResponse({
+                'error': 'CLAUDE_API_KEY not configured'
+            }, status=500)
+        
+        # Parse request body
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+        conversation_history = data.get('history', [])
+        
+        if not user_message:
+            return JsonResponse({'error': 'Message is required'}, status=400)
+        
+        # Build messages array
+        messages = conversation_history + [
+            {"role": "user", "content": user_message}
+        ]
+        
+        # Admin mode: Direct worker URL, full access (6 tools)
+        mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
+        access_level = "ADMIN mode with full access"
+        available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
+        access_message = "You can view AND update all presentation content."
+        
+        # System prompt
+        system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
+
+CURRENT MODE: {access_level}
+AVAILABLE TOOLS: {available_tools}
+ACCESS: {access_message}
+
+CRITICAL RULES - READ CAREFULLY:
+1. Maximum 3 sentences per response
+2. NO bullet points unless absolutely necessary
+3. NO markdown formatting (no **, ##, ###)
+4. Use plain text only
+5. Get to the point in first sentence
+
+When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
+When updating: "Done. Changed [X] to [Y]."
+
+GOOD (3 sentences max):
+"ToTheMoon.com is a space collectibles site with $5K/month bandwidth costs and no security. They need Cloudflare to cut costs and add WAF protection. Want to see the architecture or solutions?"
+
+BAD (too long):
+"You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally..."
+
+IMPORTANT - Network Advantages Format:
+When updating network_advantages, use CONCISE stats only:
+- latency: "~50ms from 95% of population" (NOT full sentence)
+- network_capacity: "405 Tbps" (NOT description)
+- locations: "330 cities in 125+ countries" (short version)
+- direct_connections: "13,000 networks" (NOT full sentence)
+
+Your job: Answer in 3 sentences or less. Period."""
+        
+        # Call Claude API with MCP Connector
+        response = requests.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'Content-Type': 'application/json',
+                'X-API-Key': api_key,
+                'anthropic-version': '2023-06-01',
+                'anthropic-beta': 'mcp-client-2025-04-04'
+            },
+            json={
+                'model': 'claude-sonnet-4-5',
+                'max_tokens': 4096,
+                'system': system_prompt,
+                'messages': messages,
+                'mcp_servers': [
+                    {
+                        'type': 'url',
+                        'url': mcp_server_url,
+                        'name': 'presentation-admin'
+                    }
+                ]
+            },
+            timeout=60
+        )
+        
+        # Check response status and parse
+        result = response.json()
+        
+        # Check for API errors
+        if result.get('type') == 'error':
+            error_msg = result.get('error', {}).get('message', 'Unknown error')
+            error_type = result.get('error', {}).get('type', 'unknown')
+            return JsonResponse({
+                'error': f'Anthropic API Error ({error_type}): {error_msg}'
+            }, status=500)
+        
+        # Extract assistant response
+        assistant_message = ''
+        tool_used = False
+        
+        for content_block in result.get('content', []):
+            if content_block.get('type') == 'text':
+                assistant_message += content_block.get('text', '')
+            elif content_block.get('type') == 'tool_use':
+                tool_used = True
         
         return JsonResponse({
-            'error': f'API request failed: {str(e)}',
-            'details': error_details
-        }, status=500)
+            'success': True,
+            'response': assistant_message,
+            'tool_used': tool_used,
+            'mode': 'admin'
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {'error': 'Invalid JSON in request body'},
+            status=400
+        )
+    except requests.RequestException as e:
+        return JsonResponse(
+            {'error': f'Network error: {str(e)}'},
+            status=500
+        )
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse(
+            {'error': f'Server error: {str(e)}'},
+            status=500
+        )

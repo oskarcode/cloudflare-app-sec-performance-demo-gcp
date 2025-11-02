@@ -453,15 +453,17 @@
             sendBtn.disabled = true;
             
             try {
-                const response = await fetch('/api/ai-chat/', {
+                // Use different endpoint based on mode
+                const endpoint = currentMode === 'admin' ? '/api/ai-chat-admin/' : '/api/ai-chat-user/';
+                
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         message: message,
-                        history: conversationHistory,
-                        mode: currentMode  // Send current mode (admin or user)
+                        history: conversationHistory
                     })
                 });
                 

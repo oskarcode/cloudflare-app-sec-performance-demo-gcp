@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/presentation/sections/<str:section_type>/', views.api_presentation_section, name='api_presentation_section'),
     path('api/presentation/sections/<str:section_type>/update/', views.api_presentation_section_update, name='api_presentation_section_update'),
     
-    # AI Chat endpoint
-    path('api/ai-chat/', views.ai_chat, name='ai_chat'),
+    # AI Chat endpoints - separate for user and admin modes
+    path('api/ai-chat-user/', views.ai_chat_user, name='ai_chat_user'),
+    path('api/ai-chat-admin/', views.ai_chat_admin, name='ai_chat_admin'),
 ]
