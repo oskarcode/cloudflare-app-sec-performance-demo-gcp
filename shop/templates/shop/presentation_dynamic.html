@@ -358,7 +358,122 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- AI Chat Widget -->
-{% include 'shop/includes/ai_chat_widget.html' %}
+<!-- AI Assistant Links -->
+<style>
+    .ai-assistant-fab {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+    }
+    .ai-fab-button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ai-fab-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 30px rgba(249, 115, 22, 0.6);
+    }
+    .ai-mode-menu {
+        position: absolute;
+        bottom: 75px;
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        padding: 12px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 200px;
+    }
+    .ai-mode-menu.active {
+        display: flex;
+    }
+    .ai-mode-button {
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: #1e293b;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .ai-mode-button:hover {
+        border-color: #f97316;
+        background: #fff7ed;
+        transform: translateX(-4px);
+    }
+    .ai-mode-button.user {
+        border-color: #667eea;
+    }
+    .ai-mode-button.user:hover {
+        border-color: #667eea;
+        background: #eef2ff;
+    }
+    .ai-mode-button.admin {
+        border-color: #f97316;
+    }
+    .mode-label {
+        flex: 1;
+    }
+    .mode-badge {
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: #64748b;
+    }
+</style>
+
+<div class="ai-assistant-fab">
+    <div class="ai-mode-menu" id="aiModeMenu">
+        <a href="/ai-chat-user/" class="ai-mode-button user" target="_blank">
+            <span>👀</span>
+            <span class="mode-label">User Mode</span>
+            <span class="mode-badge">Read-Only</span>
+        </a>
+        <a href="/ai-chat-admin/" class="ai-mode-button admin" target="_blank">
+            <span>🔧</span>
+            <span class="mode-label">Admin Mode</span>
+            <span class="mode-badge">Full Access</span>
+        </a>
+    </div>
+    <button class="ai-fab-button" id="aiFabButton" title="AI Assistant">
+        🤖
+    </button>
+</div>
+
+<script>
+    const fabButton = document.getElementById('aiFabButton');
+    const modeMenu = document.getElementById('aiModeMenu');
+    
+    fabButton.addEventListener('click', () => {
+        modeMenu.classList.toggle('active');
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.ai-assistant-fab')) {
+            modeMenu.classList.remove('active');
+        }
+    });
+</script>
 
 {% endblock %}
