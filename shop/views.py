@@ -374,14 +374,7 @@ GOOD (3 sentences max):
 BAD (too long):
 "You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally..."
 
-IMPORTANT - Network Advantages Format:
-When showing network_advantages, use CONCISE stats only:
-- latency: "~50ms from 95% of population"
-- network_capacity: "405 Tbps"
-- locations: "330 cities in 125+ countries"
-- direct_connections: "13,000 networks"
-
-Your job: Answer in 3 sentences or less. Period."""
+Your job: Answer in 3 sentences or less. Use get_presentation_section to view content. Period."""
         
         # Call Claude API with MCP Connector
         response = requests.post(
@@ -518,14 +511,17 @@ GOOD (3 sentences max):
 BAD (too long):
 "You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally..."
 
-IMPORTANT - Network Advantages Format:
-When updating network_advantages, use CONCISE stats only:
-- latency: "~50ms from 95% of population" (NOT full sentence)
-- network_capacity: "405 Tbps" (NOT description)
-- locations: "330 cities in 125+ countries" (short version)
-- direct_connections: "13,000 networks" (NOT full sentence)
+CRITICAL - SCHEMA STRUCTURE:
+**ALWAYS** follow the EXACT field names and structure from the current data:
+1. BEFORE updating, use get_presentation_section to see current structure
+2. Keep SAME field names (e.g., if current has "company", use "company" not "company_name")
+3. Keep SAME nesting level (don't add extra objects or flatten existing ones)
+4. Only change VALUES, never change STRUCTURE
 
-Your job: Answer in 3 sentences or less. Period."""
+Example: If current is {{"company": "X", "industry": "Y"}}, update to {{"company": "NewX", "industry": "NewY"}}
+Do NOT change to {{"company_name": "NewX"}} or {{"info": {{"company": "NewX"}}}}
+
+Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structure. Period."""
         
         # Call Claude API with MCP Connector
         response = requests.post(
