@@ -328,11 +328,19 @@ def ai_chat(request):
         ]
         
         # Determine MCP endpoint based on mode
-        # Use Cloudflare MCP Portal URLs with OAuth authentication
+        # Use Cloudflare MCP Portal URLs with OAuth authentication for both modes
         if mode == 'admin':
             # Admin mode: All 6 tools (read + write)
             mcp_server_url = 'https://mcpw.appdemo.oskarcode.com/mcp'
             token_manager = get_token_manager('admin')
+            oauth_token = token_manager.get_access_token()
+            
+            if not oauth_token:
+                return JsonResponse({
+                    'error': 'MCP authentication failed. Please re-authenticate via MCP Inspector and update tokens.',
+                    'details': 'OAuth token unavailable or refresh failed'
+                }, status=500)
+            
             access_level = "ADMIN mode with full access"
             available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
             access_message = "You can view AND update all presentation content."
@@ -340,18 +348,17 @@ def ai_chat(request):
             # User mode: Only 2 read-only tools
             mcp_server_url = 'https://mcpr.appdemo.oskarcode.com/mcp'
             token_manager = get_token_manager('readonly')
+            oauth_token = token_manager.get_access_token()
+            
+            if not oauth_token:
+                return JsonResponse({
+                    'error': 'MCP authentication failed. Please re-authenticate via MCP Inspector and update tokens.',
+                    'details': 'OAuth token unavailable or refresh failed'
+                }, status=500)
+            
             access_level = "USER mode with read-only access"
             available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
             access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
-        
-        # Get OAuth token (auto-refreshes if needed)
-        oauth_token = token_manager.get_access_token()
-        
-        if not oauth_token:
-            return JsonResponse({
-                'error': 'MCP authentication failed. Please re-authenticate via MCP Inspector and update tokens.',
-                'details': 'OAuth token unavailable or refresh failed'
-            }, status=500)
         
         # System prompt
         system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
