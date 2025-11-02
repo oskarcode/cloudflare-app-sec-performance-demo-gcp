@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloudflare Demo - Simple Presentation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 30px; margin-bottom: 20px; border-radius: 8px; }
+        .section h2 { color: #f38020; margin-bottom: 20px; }
+        .field { margin-bottom: 15px; }
+        .field-label { font-weight: bold; color: #555; }
+        .field-value { color: #333; margin-top: 5px; }
+        .list-item { padding: 10px; background: #f8f9fa; margin: 5px 0; border-radius: 4px; }
+        .nav-tabs .nav-link.active { background-color: #f38020; color: white; }
+        .debug { background: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">🚀 Cloudflare Security Demo - SIMPLE</h1>
+        <p class="text-center text-muted">Testing AI-editable presentation</p>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#case">Case Background</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#arch">Architecture</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#help">How Cloudflare Helps</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#value">Business Value</a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            
+            <!-- Case Background -->
+            <div class="tab-pane fade show active" id="case">
+                <div class="section">
+                    <h2>📋 Case Background</h2>
+                    
+                    <div class="field">
+                        <div class="field-label">Company:</div>
+                        <div class="field-value">{{ case_background.company|default:"Not set" }}</div>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="field-label">Industry:</div>
+                        <div class="field-value">{{ case_background.industry|default:"Not set" }}</div>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="field-label">Description:</div>
+                        <div class="field-value">{{ case_background.description|default:"Not set" }}</div>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="field-label">Current Challenge:</div>
+                        <div class="field-value">{{ case_background.current_challenge|default:"Not set" }}</div>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="field-label">Pain Points:</div>
+                        {% if case_background.pain_points %}
+                            {% for point in case_background.pain_points %}
+                            <div class="list-item">{{ point }}</div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="field-value">No pain points listed</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architecture -->
+            <div class="tab-pane fade" id="arch">
+                <div class="section">
+                    <h2>🏗️ Architecture</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Before Cloudflare</h4>
+                            {% if architecture.current_stack %}
+                                {% for step in architecture.current_stack %}
+                                <div class="list-item">{{ step }}</div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No architecture defined</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h4>With Cloudflare</h4>
+                            {% if architecture.cloudflare_stack %}
+                                {% for step in architecture.cloudflare_stack %}
+                                <div class="list-item">{{ step }}</div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No architecture defined</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How Cloudflare Helps -->
+            <div class="tab-pane fade" id="help">
+                <div class="section">
+                    <h2>💡 How Cloudflare Helps</h2>
+                    
+                    {% if how_cloudflare_help.solutions %}
+                        {% for solution in how_cloudflare_help.solutions %}
+                        <div class="list-item">
+                            <strong>{{ solution.name }}:</strong> {{ solution.description }}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No solutions listed</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Business Value -->
+            <div class="tab-pane fade" id="value">
+                <div class="section">
+                    <h2>📊 Business Value</h2>
+                    
+                    {% if business_value.metrics %}
+                        {% for metric in business_value.metrics %}
+                        <div class="list-item">
+                            <strong>{{ metric.category }}:</strong> {{ metric.value }}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No metrics available</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Debug Info -->
+        <div class="debug">
+            <strong>🔍 Debug Info:</strong><br>
+            Case Background keys: {{ case_background.keys|join:", " }}<br>
+            Architecture keys: {{ architecture.keys|join:", " }}<br>
+            How CF Helps keys: {{ how_cloudflare_help.keys|join:", " }}<br>
+            Business Value keys: {{ business_value.keys|join:", " }}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

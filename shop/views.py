@@ -128,6 +128,25 @@ def presentation(request):
     
     return render(request, 'shop/presentation_dynamic.html', context)
 
+def presentation_simple(request):
+    """
+    SIMPLE presentation page for AI testing - minimal, reliable structure.
+    """
+    # Fetch all presentation sections from database
+    sections = {}
+    for section in PresentationSection.objects.all():
+        sections[section.section_type] = section.content_json
+    
+    # Provide default empty dicts if sections don't exist
+    context = {
+        'case_background': sections.get('case_background', {}),
+        'architecture': sections.get('architecture', {}),
+        'how_cloudflare_help': sections.get('how_cloudflare_help', {}),
+        'business_value': sections.get('business_value', {}),
+    }
+    
+    return render(request, 'shop/presentation_simple.html', context)
+
 def flash_sale(request):
     """
     Flash sale page for demonstrating Workers rate limiting.
