@@ -576,3 +576,23 @@ Your job: Answer in 3 sentences or less. Period."""
             {'error': f'Server error: {str(e)}'},
             status=500
         )
+
+
+# =====================================================
+# AI CHAT PAGES - USER AND ADMIN
+# =====================================================
+
+def ai_chat_user_page(request):
+    """
+    Render the User AI Chat page (read-only mode).
+    Public access - no authentication required.
+    """
+    return render(request, 'shop/ai_chat_user.html')
+
+
+def ai_chat_admin_page(request):
+    """
+    Render the Admin AI Chat page (full read/write access).
+    PROTECT THIS PAGE with Cloudflare Access policy!
+    """
+    return render(request, 'shop/ai_chat_admin.html')
