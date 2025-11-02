@@ -252,11 +252,19 @@
                     <div class="col-lg-6 mb-4">
                         <div class="card solution card-hover h-100">
                             <div class="card-body">
-                                <h5><i class="fas fa-shield-alt"></i> {{ solution.product }}</h5>
-                                <p class="mb-2"><strong>Capability:</strong> {{ solution.capability }}</p>
+                                <h5><i class="fas fa-shield-alt"></i> {{ solution.pain_point }}</h5>
+                                <p class="mb-2"><strong>Capability:</strong> {{ solution.cloudflare_solution }}</p>
+                                <p class="text-muted"><small>{{ solution.how_it_works }}</small></p>
                                 <div class="mt-3">
                                     <div class="alert alert-success mb-0">
-                                        <strong><i class="fas fa-check-circle"></i> Benefit:</strong> {{ solution.customer_benefit }}
+                                        <strong><i class="fas fa-check-circle"></i> Benefits:</strong>
+                                        {% if solution.benefits %}
+                                        <ul class="mb-0 mt-2">
+                                            {% for benefit in solution.benefits %}
+                                            <li>{{ benefit }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -309,13 +317,26 @@
                     <div class="col-lg-6 mb-4">
                         <div class="card card-hover h-100">
                             <div class="card-header bg-primary text-white">
-                                <h5><i class="fas fa-chart-line"></i> {{ prop.category }}</h5>
+                                <h5><i class="fas fa-{{ prop.icon }}"></i> {{ prop.title }}</h5>
                             </div>
                             <div class="card-body">
-                                <div class="alert alert-info mb-3">
-                                    <h6 class="mb-0"><i class="fas fa-dollar-sign"></i> {{ prop.value }}</h6>
+                                <p>{{ prop.description }}</p>
+                                {% if prop.metrics %}
+                                <div class="mt-3">
+                                    {% for metric in prop.metrics %}
+                                    <div class="alert alert-info mb-2">
+                                        <strong>{{ metric.label }}:</strong> <span class="text-success">{{ metric.improvement }}</span>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                <p>{{ prop.explanation }}</p>
+                                {% endif %}
+                                {% if prop.learn_more %}
+                                <div class="mt-3">
+                                    {% for link in prop.learn_more %}
+                                    <a href="{{ link.url }}" class="btn btn-sm btn-outline-primary me-2">{{ link.text }}</a>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
