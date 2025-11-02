@@ -232,6 +232,12 @@
                 role: role,
                 content: content
             });
+            
+            // Keep only last 6 messages (3 exchanges) to prevent large requests
+            // MCP handles tool state internally, so we don't need long history
+            if (conversationHistory.length > 6) {
+                conversationHistory = conversationHistory.slice(-6);
+            }
         }
 
         async function sendMessage() {
