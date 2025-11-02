@@ -327,7 +327,7 @@ def ai_chat_user(request):
         ]
         
         # User mode: Direct worker URL, read-only tools (2 tools)
-        mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/mcp'
+        mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
         access_level = "USER mode with read-only access"
         available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
         access_message = "You can ONLY VIEW content. You CANNOT update anything."
@@ -471,7 +471,7 @@ def ai_chat_admin(request):
         ]
         
         # Admin mode: Direct worker URL, full access (6 tools)
-        mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/mcp'
+        mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
         access_level = "ADMIN mode with full access"
         available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
         access_message = "You can view AND update all presentation content."
