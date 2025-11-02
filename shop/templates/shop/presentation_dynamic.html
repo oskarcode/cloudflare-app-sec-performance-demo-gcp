@@ -111,13 +111,15 @@
                     {% if case_background.business_context %}
                     <div class="card card-hover mb-4">
                         <div class="card-body">
-                            <h5><i class="fas fa-store"></i> {{ case_background.business_context.company_name }}</h5>
-                            <p><strong>Industry:</strong> {{ case_background.business_context.industry }}</p>
-                            <p>{{ case_background.business_context.business_model }}</p>
+                            <h5><i class="fas fa-store"></i> {{ case_background.business_context.title }}</h5>
+                            <p>{{ case_background.business_context.description }}</p>
+                            {% if case_background.business_context.stats %}
                             <ul class="list-unstyled">
-                                <li><i class="fas fa-users text-primary"></i> <strong>Size:</strong> {{ case_background.business_context.size }}</li>
-                                <li><i class="fas fa-bullseye text-primary"></i> <strong>Audience:</strong> {{ case_background.business_context.target_audience }}</li>
+                                {% for stat in case_background.business_context.stats %}
+                                <li><i class="fas fa-{{ stat.icon }} text-primary"></i> <strong>{{ stat.label }}:</strong> {{ stat.value }}</li>
+                                {% endfor %}
                             </ul>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
@@ -126,11 +128,12 @@
                     <h3><i class="fas fa-wrench"></i> Current Solution</h3>
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <strong>{{ case_background.current_solution.infrastructure }}</strong>
-                        {% if case_background.current_solution.challenges %}
+                        <strong>{{ case_background.current_solution.title }}</strong>
+                        <p>{{ case_background.current_solution.description }}</p>
+                        {% if case_background.current_solution.problems %}
                         <ul class="mt-2">
-                            {% for challenge in case_background.current_solution.challenges %}
-                            <li>{{ challenge }}</li>
+                            {% for problem in case_background.current_solution.problems %}
+                            <li>{{ problem }}</li>
                             {% endfor %}
                         </ul>
                         {% endif %}
@@ -145,8 +148,15 @@
                         {% for pain_point in case_background.pain_points %}
                         <div class="card pain-point mb-3">
                             <div class="card-body">
-                                <h6><i class="fas fa-exclamation-triangle"></i> <strong>{{ pain_point.category }}:</strong> {{ pain_point.issue }}</h6>
-                                <p class="mb-1"><strong>Impact:</strong> {{ pain_point.impact }}</p>
+                                <h6><i class="fas fa-{{ pain_point.icon }}"></i> <strong>{{ pain_point.title }}</strong></h6>
+                                <p class="mb-1">{{ pain_point.description }}</p>
+                                {% if pain_point.test_links %}
+                                <div class="mt-2">
+                                    {% for link in pain_point.test_links %}
+                                    <a href="{{ link.url }}" class="btn btn-sm btn-outline-danger me-2" target="_blank">{{ link.text }}</a>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
