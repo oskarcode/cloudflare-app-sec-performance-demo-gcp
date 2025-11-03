@@ -316,7 +316,6 @@ def ai_chat(request):
         data = json.loads(request.body)
         user_message = data.get('message', '')
         conversation_history = data.get('history', [])
-        mode = data.get('mode', 'user')  # 'admin' or 'user'
         
         if not user_message:
             return JsonResponse({'error': 'Message is required'}, status=400)
@@ -326,27 +325,8 @@ def ai_chat(request):
             {"role": "user", "content": user_message}
         ]
         
-        # Determine MCP endpoint based on mode
-        # Use direct worker URLs with IP-based access control
-        if mode == 'admin':
-            # Admin mode: All 6 tools (read + write)
-            mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
-            access_level = "ADMIN mode with full access"
-            available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
-            access_message = "You can view AND update all presentation content."
-        else:
-            # User mode: Only 2 read-only tools
-            mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
-            access_level = "USER mode with read-only access"
-            available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
-            access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
-        
         # System prompt
-        system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
-
-CURRENT MODE: {access_level}
-AVAILABLE TOOLS: {available_tools}
-ACCESS: {access_message}
+        system_prompt = """You are a brief, direct AI assistant for Cloudflare demo presentations.
 
 CRITICAL RULES - READ CAREFULLY:
 1. Maximum 3 sentences per response
@@ -354,7 +334,6 @@ CRITICAL RULES - READ CAREFULLY:
 3. NO markdown formatting (no **, ##, ###)
 4. Use plain text only
 5. Get to the point in first sentence
-6. If user asks to update/change/edit content in USER mode, IMMEDIATELY respond: "I'm in User mode (read-only). I can only view content, not update it. Click the User button at the top to switch to Admin mode for write access. Your available tools: get_all_sections, get_presentation_section."
 
 When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
 When updating: "Done. Changed [X] to [Y]."
@@ -373,6 +352,9 @@ When updating network_advantages, use CONCISE stats only:
 - direct_connections: "13,000 networks" (NOT full sentence about ISPs)
 
 Your job: Answer in 3 sentences or less. Period."""
+
+        # Get MCP server URL
+        mcp_server_url = os.getenv('MCP_SERVER_URL', 'https://appdemo.oskarcode.com/mcp')
         
         # Call Claude API with MCP Connector
         response = requests.post(
@@ -391,7 +373,7 @@ Your job: Answer in 3 sentences or less. Period."""
                 'mcp_servers': [
                     {
                         'type': 'url',
-                        'url': mcp_server_url,
+                        'url': f'{mcp_server_url}/sse',
                         'name': 'presentation-manager'
                     }
                 ]
@@ -399,66 +381,37 @@ Your job: Answer in 3 sentences or less. Period."""
             timeout=60
         )
         
-        # Check response status and parse
+        response.raise_for_status()
         result = response.json()
         
-        # Check for API errors
-        if result.get('type') == 'error':
-            error_msg = result.get('error', {}).get('message', 'Unknown error')
-            error_type = result.get('error', {}).get('type', 'unknown')
-            return JsonResponse({
-                'error': f'Anthropic API Error ({error_type}): {error_msg}',
-                'details': result.get('error', {})
-            }, status=400)
-        
-        # Extract response text from Claude and check for tool usage
+        # Extract response text from Claude
         response_text = ""
         tool_used = False
-        text_blocks = []
         
         if 'content' in result:
             for block in result['content']:
                 if block.get('type') == 'text':
                     response_text += block.get('text', '')
-                    text_blocks.append(block)
                 elif 'tool' in block.get('type', ''):
                     tool_used = True
         
         # Build conversation history for next turn
-        # IMPORTANT: Only include text blocks, not tool_use blocks
-        # MCP connector handles tool execution separately, and including tool_use
-        # without tool_result blocks causes API errors
         assistant_message = {
             'role': 'assistant',
-            'content': text_blocks if text_blocks else [{'type': 'text', 'text': response_text}]
+            'content': result.get('content', [])
         }
-        
-        # If tools were used, start fresh conversation to avoid tool_use/tool_result errors
-        # MCP handles tool execution internally, so we don't need to track it
-        conversation = messages + [assistant_message] if not tool_used else [messages[-1], assistant_message]
         
         return JsonResponse({
             'success': True,
             'response': response_text,
             'tool_used': tool_used,
-            'conversation': conversation,
+            'conversation': messages + [assistant_message],
             'usage': result.get('usage', {})
         })
     
-    except json.JSONDecodeError as e:
-        return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except requests.exceptions.RequestException as e:
-        # Try to get error details from response
-        error_details = None
-        try:
-            if hasattr(e, 'response') and e.response is not None:
-                error_details = e.response.json()
-        except:
-            pass
-        
-        return JsonResponse({
-            'error': f'API request failed: {str(e)}',
-            'details': error_details
-        }, status=500)
+        return JsonResponse({'error': f'API request failed: {str(e)}'}, status=500)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

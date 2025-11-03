@@ -53,30 +53,6 @@
     .ai-chat-clear:hover {
         background: rgba(255,255,255,0.3);
     }
-    .ai-chat-mode-toggle {
-        background: rgba(255,255,255,0.2);
-        border: none;
-        color: white;
-        font-size: 12px;
-        cursor: pointer;
-        padding: 6px 12px;
-        border-radius: 4px;
-        margin-right: 10px;
-        transition: all 0.2s;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .ai-chat-mode-toggle:hover {
-        background: rgba(255,255,255,0.3);
-    }
-    .ai-chat-mode-toggle.admin {
-        background: rgba(239, 68, 68, 0.3);
-    }
-    .ai-chat-mode-toggle.user {
-        background: rgba(59, 130, 246, 0.3);
-    }
     .ai-chat-messages {
         flex: 1;
         padding: 15px;
@@ -218,17 +194,14 @@
 <div class="ai-chat-widget" id="ai-chat-widget">
     <div class="ai-chat-header">
         <h5><i class="fas fa-robot"></i> AI Assistant</h5>
-        <div style="display: flex; align-items: center;">
-            <button class="ai-chat-mode-toggle user" id="ai-chat-mode-toggle" title="Switch between Admin (all tools) and User (read-only) mode">
-                <i class="fas fa-user"></i>
-                <span id="ai-mode-label">User</span>
-            </button>
+        <div>
             <button class="ai-chat-clear" id="ai-chat-clear" title="Clear chat history">
                 <i class="fas fa-trash-alt"></i> Clear
             </button>
             <button class="ai-chat-close" id="ai-chat-close">&times;</button>
         </div>
-    </div>    <div class="ai-chat-messages" id="ai-chat-messages">
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
         <div class="ai-message assistant">
             <div class="ai-message-avatar">🤖</div>
             <div class="ai-message-content">
@@ -265,8 +238,6 @@
         const btn = document.getElementById('ai-assistant-btn');
         const closeBtn = document.getElementById('ai-chat-close');
         const clearBtn = document.getElementById('ai-chat-clear');
-        const modeToggleBtn = document.getElementById('ai-chat-mode-toggle');
-        const modeLabelSpan = document.getElementById('ai-mode-label');
         const form = document.getElementById('ai-chat-form');
         const input = document.getElementById('ai-chat-input');
         const messagesDiv = document.getElementById('ai-chat-messages');
@@ -275,9 +246,7 @@
         
         const STORAGE_KEY = 'ai_chat_history';
         const STORAGE_CONVERSATION_KEY = 'ai_conversation_history';
-        const STORAGE_MODE_KEY = 'ai_chat_mode';
         let conversationHistory = [];
-        let currentMode = 'user'; // 'admin' or 'user'
         
         // Load chat history from localStorage
         function loadChatHistory() {
@@ -324,60 +293,6 @@
             localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem(STORAGE_CONVERSATION_KEY);
         }
-        
-        // Load mode from localStorage
-        function loadMode() {
-            try {
-                const savedMode = localStorage.getItem(STORAGE_MODE_KEY);
-                if (savedMode) {
-                    currentMode = savedMode;
-                    updateModeUI();
-                }
-            } catch (e) {
-                console.error('Error loading mode:', e);
-            }
-        }
-        
-        // Save mode to localStorage
-        function saveMode() {
-            try {
-                localStorage.setItem(STORAGE_MODE_KEY, currentMode);
-            } catch (e) {
-                console.error('Error saving mode:', e);
-            }
-        }
-        
-        // Update mode UI
-        function updateModeUI() {
-            modeToggleBtn.className = `ai-chat-mode-toggle ${currentMode}`;
-            
-            if (currentMode === 'admin') {
-                modeLabelSpan.textContent = 'Admin';
-                modeToggleBtn.querySelector('i').className = 'fas fa-user-shield';
-                modeToggleBtn.title = 'Admin mode: All tools available (Read + Write)';
-            } else {
-                modeLabelSpan.textContent = 'User';
-                modeToggleBtn.querySelector('i').className = 'fas fa-user';
-                modeToggleBtn.title = 'User mode: Read-only tools';
-            }
-        }
-        
-        // Toggle mode
-        modeToggleBtn.addEventListener('click', () => {
-            currentMode = currentMode === 'admin' ? 'user' : 'admin';
-            updateModeUI();
-            saveMode();
-            
-            // Clear conversation history to prevent old mode context from persisting
-            conversationHistory = [];
-            saveChatHistory();
-            
-            // Show notification
-            const modeText = currentMode === 'admin' ? 
-                'Admin mode: All tools available (6 tools)' : 
-                'User mode: Read-only access (2 tools)';
-            addMessage('assistant', `✨ Switched to ${modeText}. Previous conversation cleared.`, false);
-        });
         
         // Toggle widget
         btn.addEventListener('click', () => {
@@ -460,8 +375,7 @@
                     },
                     body: JSON.stringify({
                         message: message,
-                        history: conversationHistory,
-                        mode: currentMode  // Send current mode (admin or user)
+                        history: conversationHistory
                     })
                 });
                 
@@ -495,9 +409,8 @@
             }
         });
         
-        // Load history and mode on page load
+        // Load history on page load
         loadChatHistory();
-        loadMode();
         
         // Add "Clear History" button (optional - can be added to UI if needed)
         window.clearAIChatHistory = clearChatHistory;
