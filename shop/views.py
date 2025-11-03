@@ -128,25 +128,6 @@ def presentation(request):
     
     return render(request, 'shop/presentation_dynamic.html', context)
 
-def presentation_simple(request):
-    """
-    SIMPLE presentation page for AI testing - minimal, reliable structure.
-    """
-    # Fetch all presentation sections from database
-    sections = {}
-    for section in PresentationSection.objects.all():
-        sections[section.section_type] = section.content_json
-    
-    # Provide default empty dicts if sections don't exist
-    context = {
-        'case_background': sections.get('case_background', {}),
-        'architecture': sections.get('architecture', {}),
-        'how_cloudflare_help': sections.get('how_cloudflare_help', {}),
-        'business_value': sections.get('business_value', {}),
-    }
-    
-    return render(request, 'shop/presentation_simple.html', context)
-
 def flash_sale(request):
     """
     Flash sale page for demonstrating Workers rate limiting.
@@ -310,15 +291,13 @@ def api_presentation_section_update(request, section_type):
 
 
 # =====================================================
-# =====================================================
-# AI CHAT WITH MCP CONNECTOR - UNIFIED ENDPOINT
+# AI CHAT WITH MCP CONNECTOR
 # =====================================================
 
 @csrf_exempt
 def ai_chat(request):
     """
-    Unified AI chat endpoint with full read/write access.
-    Uses single MCP server with all 6 tools (2 read, 4 write).
+    AI chat endpoint that integrates Claude with MCP connector.
     Allows natural language editing of presentation content.
     """
     if request.method != 'POST':
@@ -337,25 +316,37 @@ def ai_chat(request):
         data = json.loads(request.body)
         user_message = data.get('message', '')
         conversation_history = data.get('history', [])
+        mode = data.get('mode', 'user')  # 'admin' or 'user'
         
         if not user_message:
             return JsonResponse({'error': 'Message is required'}, status=400)
         
-        # Build messages array  (limit to last 6 messages to avoid large requests)
-        if len(conversation_history) > 6:
-            conversation_history = conversation_history[-6:]
-        
+        # Build messages array
         messages = conversation_history + [
             {"role": "user", "content": user_message}
         ]
         
-        # Single MCP server with all tools
-        mcp_server_url = 'https://appdemo.oskarcode.com/mcp/sse'
+        # Determine MCP endpoint based on mode
+        # Use direct worker URLs with IP-based access control
+        if mode == 'admin':
+            # Admin mode: All 6 tools (read + write)
+            mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
+            access_level = "ADMIN mode with full access"
+            available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
+            access_message = "You can view AND update all presentation content."
+        else:
+            # User mode: Only 2 read-only tools
+            mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
+            access_level = "USER mode with read-only access"
+            available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
+            access_message = "You can ONLY VIEW content. You CANNOT update anything. Click the User button in the chat header to switch to Admin mode if you need to make updates."
         
         # System prompt
-        system_prompt = """You are a brief, direct AI assistant for Cloudflare demo presentations.
+        system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
 
-AVAILABLE TOOLS: 6 tools total - get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)
+CURRENT MODE: {access_level}
+AVAILABLE TOOLS: {available_tools}
+ACCESS: {access_message}
 
 CRITICAL RULES - READ CAREFULLY:
 1. Maximum 3 sentences per response
@@ -363,6 +354,7 @@ CRITICAL RULES - READ CAREFULLY:
 3. NO markdown formatting (no **, ##, ###)
 4. Use plain text only
 5. Get to the point in first sentence
+6. If user asks to update/change/edit content in USER mode, IMMEDIATELY respond: "I'm in User mode (read-only). I can only view content, not update it. Click the User button at the top to switch to Admin mode for write access. Your available tools: get_all_sections, get_presentation_section."
 
 When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
 When updating: "Done. Changed [X] to [Y]."
@@ -371,19 +363,16 @@ GOOD (3 sentences max):
 "ToTheMoon.com is a space collectibles site with $5K/month bandwidth costs and no security. They need Cloudflare to cut costs and add WAF protection. Want to see the architecture or solutions?"
 
 BAD (too long):
-"You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally..."
+"You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally. They're a mid-sized business (~50-100 employees, $10-25M revenue)... [continues with multiple paragraphs]"
 
-CRITICAL - SCHEMA STRUCTURE:
-**ALWAYS** follow the EXACT field names and structure from the current data:
-1. BEFORE updating, use get_presentation_section to see current structure
-2. Keep SAME field names (e.g., if current has "company", use "company" not "company_name")
-3. Keep SAME nesting level (don't add extra objects or flatten existing ones)
-4. Only change VALUES, never change STRUCTURE
+IMPORTANT - Network Advantages Format:
+When updating network_advantages, use CONCISE stats only:
+- latency: "~50ms from 95% of population" (NOT full sentence)
+- network_capacity: "405 Tbps" (NOT description of what it consists of)
+- locations: "330 cities in 125+ countries" (short version)
+- direct_connections: "13,000 networks" (NOT full sentence about ISPs)
 
-Example: If current is {{"company": "X", "industry": "Y"}}, update to {{"company": "NewX", "industry": "NewY"}}
-Do NOT change to {{"company_name": "NewX"}} or {{"info": {{"company": "NewX"}}}}
-
-Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structure. Period."""
+Your job: Answer in 3 sentences or less. Period."""
         
         # Call Claude API with MCP Connector
         response = requests.post(
@@ -403,11 +392,11 @@ Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structu
                     {
                         'type': 'url',
                         'url': mcp_server_url,
-                        'name': 'presentation'
+                        'name': 'presentation-manager'
                     }
                 ]
             },
-            timeout=120  # Increased for complex multi-section updates
+            timeout=60
         )
         
         # Check response status and parse
@@ -418,37 +407,58 @@ Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structu
             error_msg = result.get('error', {}).get('message', 'Unknown error')
             error_type = result.get('error', {}).get('type', 'unknown')
             return JsonResponse({
-                'error': f'Anthropic API Error ({error_type}): {error_msg}'
-            }, status=500)
+                'error': f'Anthropic API Error ({error_type}): {error_msg}',
+                'details': result.get('error', {})
+            }, status=400)
         
-        # Extract assistant response
-        assistant_message = ''
+        # Extract response text from Claude and check for tool usage
+        response_text = ""
         tool_used = False
+        text_blocks = []
         
-        for content_block in result.get('content', []):
-            if content_block.get('type') == 'text':
-                assistant_message += content_block.get('text', '')
-            elif content_block.get('type') == 'tool_use':
-                tool_used = True
+        if 'content' in result:
+            for block in result['content']:
+                if block.get('type') == 'text':
+                    response_text += block.get('text', '')
+                    text_blocks.append(block)
+                elif 'tool' in block.get('type', ''):
+                    tool_used = True
+        
+        # Build conversation history for next turn
+        # IMPORTANT: Only include text blocks, not tool_use blocks
+        # MCP connector handles tool execution separately, and including tool_use
+        # without tool_result blocks causes API errors
+        assistant_message = {
+            'role': 'assistant',
+            'content': text_blocks if text_blocks else [{'type': 'text', 'text': response_text}]
+        }
+        
+        # If tools were used, start fresh conversation to avoid tool_use/tool_result errors
+        # MCP handles tool execution internally, so we don't need to track it
+        conversation = messages + [assistant_message] if not tool_used else [messages[-1], assistant_message]
         
         return JsonResponse({
             'success': True,
-            'response': assistant_message,
-            'tool_used': tool_used
+            'response': response_text,
+            'tool_used': tool_used,
+            'conversation': conversation,
+            'usage': result.get('usage', {})
         })
     
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {'error': 'Invalid JSON in request body'},
-            status=400
-        )
-    except requests.RequestException as e:
-        return JsonResponse(
-            {'error': f'Network error: {str(e)}'},
-            status=500
-        )
+    except json.JSONDecodeError as e:
+        return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
+    except requests.exceptions.RequestException as e:
+        # Try to get error details from response
+        error_details = None
+        try:
+            if hasattr(e, 'response') and e.response is not None:
+                error_details = e.response.json()
+        except:
+            pass
+        
+        return JsonResponse({
+            'error': f'API request failed: {str(e)}',
+            'details': error_details
+        }, status=500)
     except Exception as e:
-        return JsonResponse(
-            {'error': f'Server error: {str(e)}'},
-            status=500
-        )
+        return JsonResponse({'error': str(e)}, status=500)

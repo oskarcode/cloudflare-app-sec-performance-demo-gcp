@@ -13,7 +13,6 @@ urlpatterns = [
     path('api/products/', views.api_products, name='api_products'),
     path('api/login-test/', views.api_login_test, name='api_login_test'),
     path('presentation/', views.presentation, name='presentation'),
-    path('presentation/simple/', views.presentation_simple, name='presentation_simple'),
     path('flash-sale/', views.flash_sale, name='flash_sale'),
     path('.git/secrets.txt', views.git_secrets, name='git_secrets'),
     path('.env.backup/', views.env_backup, name='env_backup'),
@@ -24,6 +23,6 @@ urlpatterns = [
     path('api/presentation/sections/<str:section_type>/', views.api_presentation_section, name='api_presentation_section'),
     path('api/presentation/sections/<str:section_type>/update/', views.api_presentation_section_update, name='api_presentation_section_update'),
     
-    # AI Chat endpoint - unified with all tools
+    # AI Chat endpoint
     path('api/ai-chat/', views.ai_chat, name='ai_chat'),
 ]
