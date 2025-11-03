@@ -60,6 +60,35 @@
         max-height: 400px;
         background: #f8f9fa;
     }
+    .ai-quick-prompts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+        padding: 0 15px;
+    }
+    .ai-prompt-btn {
+        background: white;
+        border: 1px solid #e5e7eb;
+        color: #374151;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ai-prompt-btn:hover {
+        background: #f97316;
+        color: white;
+        border-color: #f97316;
+        transform: translateY(-1px);
+    }
+    .ai-prompt-btn i {
+        font-size: 12px;
+    }
     .ai-message {
         margin-bottom: 12px;
         display: flex;
@@ -205,14 +234,32 @@
         <div class="ai-message assistant">
             <div class="ai-message-avatar">🤖</div>
             <div class="ai-message-content">
-                Hi! I'm your AI assistant. I can help you update the presentation content. Try asking me to:
-                <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-                    <li>Show current content</li>
-                    <li>Update a specific section</li>
-                    <li>Change business context</li>
-                </ul>
+                Hi! I'm your AI assistant. I can help you with the presentation content. Try these quick actions:
             </div>
         </div>
+    </div>
+    <div class="ai-quick-prompts" id="ai-quick-prompts">
+        <button class="ai-prompt-btn" data-prompt="What is the company?">
+            <i class="fas fa-building"></i> Company Info
+        </button>
+        <button class="ai-prompt-btn" data-prompt="Show me the pain points">
+            <i class="fas fa-exclamation-triangle"></i> Pain Points
+        </button>
+        <button class="ai-prompt-btn" data-prompt="Show the architecture">
+            <i class="fas fa-sitemap"></i> Architecture
+        </button>
+        <button class="ai-prompt-btn" data-prompt="What are the business values?">
+            <i class="fas fa-chart-line"></i> Business Value
+        </button>
+        <button class="ai-prompt-btn" data-prompt="Update company to Manufacturing">
+            <i class="fas fa-industry"></i> → Manufacturing
+        </button>
+        <button class="ai-prompt-btn" data-prompt="Update company to Fintech">
+            <i class="fas fa-university"></i> → Fintech
+        </button>
+        <button class="ai-prompt-btn" data-prompt="Update company to E-commerce">
+            <i class="fas fa-shopping-cart"></i> → E-commerce
+        </button>
     </div>
     <div class="ai-thinking" id="ai-thinking">
         <i class="fas fa-circle-notch fa-spin"></i>
@@ -317,7 +364,22 @@
                         </div>
                     </div>
                 `;
+                // Show quick prompts again
+                const quickPromptsDiv = document.getElementById('ai-quick-prompts');
+                if (quickPromptsDiv) {
+                    quickPromptsDiv.style.display = 'flex';
+                }
             }
+        });
+        
+        // Quick prompt buttons
+        document.querySelectorAll('.ai-prompt-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const prompt = btn.getAttribute('data-prompt');
+                input.value = prompt;
+                // Trigger form submission
+                form.dispatchEvent(new Event('submit'));
+            });
         });
         
         // Add message to chat
@@ -362,6 +424,12 @@
             // Add user message
             addMessage('user', message);
             input.value = '';
+            
+            // Hide quick prompts after first message
+            const quickPromptsDiv = document.getElementById('ai-quick-prompts');
+            if (quickPromptsDiv) {
+                quickPromptsDiv.style.display = 'none';
+            }
             
             // Show thinking indicator
             thinkingDiv.classList.add('active');
