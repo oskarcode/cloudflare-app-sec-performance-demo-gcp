@@ -286,27 +286,27 @@ export default {
 
 		let response: Response;
 
-		// Handle SSE transport (GET requests to /sse or /mcpw/sse)
-		if ((url.pathname === "/mcpw/sse" || url.pathname === "/sse") && request.method === "GET") {
-			response = await PresentationMCP.serveSSE("/mcpw/sse").fetch(request, env, ctx);
+		// Handle SSE transport (GET requests to /mcp/sse or /sse)
+		if ((url.pathname === "/mcp/sse" || url.pathname === "/sse") && request.method === "GET") {
+			response = await PresentationMCP.serveSSE("/mcp/sse").fetch(request, env, ctx);
 		}
 		// Handle HTTP transport (POST requests)
-		else if ((url.pathname === "/mcpw/sse" || url.pathname === "/mcpw" || url.pathname === "/sse") && request.method === "POST") {
-			response = await PresentationMCP.serve("/mcpw/sse").fetch(request, env, ctx);
+		else if ((url.pathname === "/mcp/sse" || url.pathname === "/mcp" || url.pathname === "/sse") && request.method === "POST") {
+			response = await PresentationMCP.serve("/mcp/sse").fetch(request, env, ctx);
 		}
 		// Handle message endpoint
-		else if (url.pathname === "/mcpw/sse/message" || url.pathname === "/sse/message") {
-			response = await PresentationMCP.serveSSE("/mcpw/sse").fetch(request, env, ctx);
+		else if (url.pathname === "/mcp/sse/message" || url.pathname === "/sse/message") {
+			response = await PresentationMCP.serveSSE("/mcp/sse").fetch(request, env, ctx);
 		}
 		// Default response
 		else {
 			response = new Response(
 				JSON.stringify({
-					name: "Presentation MCP Server - Read/Write",
+					name: "Presentation MCP Server - Unified",
 					version: "1.0.0",
-					access: "read_write",
+					access: "full",
 					tools: ["get_all_sections", "get_presentation_section", "update_case_background", "update_architecture", "update_how_cloudflare_help", "update_business_value"],
-					endpoints: "/mcpw/sse (GET/POST)",
+					endpoints: "/mcp/sse (GET/POST)",
 				}),
 				{ 
 					status: 200,
