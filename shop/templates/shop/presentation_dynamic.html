@@ -608,6 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         isProcessing = true;
         sendBtn.disabled = true;
+        sendBtn.textContent = '...';
         chatInput.value = '';
         
         // Add user message
@@ -619,21 +620,54 @@ document.addEventListener('DOMContentLoaded', function() {
             conversationHistory = conversationHistory.slice(-6);
         }
         
+        // Show progress
+        const progressMsg = addMessage('🤖 AI is thinking...', 'system');
+        
         try {
             const endpoint = currentMode === 'user' ? '/api/ai-chat-user/' : '/api/ai-chat-admin/';
+            
+            // Show what AI is doing
+            setTimeout(() => {
+                if (isProcessing) {
+                    progressMsg.textContent = currentMode === 'admin' 
+                        ? '🔄 AI is reading current content and preparing updates...'
+                        : '📖 AI is reading presentation content...';
+                }
+            }, 1500);
+            
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: JSON.stringify({
                     message: message,
                     history: conversationHistory
                 })
             });
             
+            // Remove progress message
+            progressMsg.remove();
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text.substring(0, 200));
+                addMessage('❌ Server error: Expected JSON but got HTML. Check console for details.', 'system');
+                isProcessing = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                return;
+            }
+            
             const data = await response.json();
             
-            if (data.error) {
-                addMessage('Error: ' + data.error, 'system');
+            if (!response.ok) {
+                addMessage('❌ Server error: ' + (data.error || response.statusText), 'system');
+            } else if (data.error) {
+                addMessage('❌ Error: ' + data.error, 'system');
             } else {
                 addMessage(data.response, 'assistant');
                 conversationHistory.push({ role: 'assistant', content: data.response });
@@ -645,17 +679,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     data.response.toLowerCase().includes('changed')
                 )) {
                     setTimeout(() => {
-                        addMessage('🔄 Auto-refreshing presentation...', 'system');
-                        setTimeout(() => location.reload(), 1000);
-                    }, 1500);
+                        addMessage('🔄 Auto-refreshing presentation in 2 seconds...', 'system');
+                        setTimeout(() => location.reload(), 2000);
+                    }, 1000);
                 }
             }
         } catch (error) {
-            addMessage('Error: ' + error.message, 'system');
+            // Remove progress message if still there
+            if (progressMsg && progressMsg.parentNode) {
+                progressMsg.remove();
+            }
+            console.error('Fetch error:', error);
+            addMessage('❌ Network error: ' + error.message + '. Check your connection.', 'system');
         }
         
         isProcessing = false;
         sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
         chatInput.focus();
     }
     
@@ -665,6 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         chatMessages.appendChild(div);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        return div; // Return element for removal/updates
     }
     
     sendBtn.addEventListener('click', sendMessage);
