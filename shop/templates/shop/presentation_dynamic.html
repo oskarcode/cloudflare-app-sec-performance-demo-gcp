@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- AI Assistant Links -->
+<!-- Embedded AI Assistant -->
 <style>
     .ai-assistant-fab {
         position: fixed;
@@ -414,94 +414,262 @@ document.addEventListener('DOMContentLoaded', function() {
         transform: scale(1.1);
         box-shadow: 0 6px 30px rgba(249, 115, 22, 0.6);
     }
-    .ai-mode-menu {
-        position: absolute;
-        bottom: 75px;
-        right: 0;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-        padding: 12px;
+    
+    .ai-chat-panel {
         display: none;
-        flex-direction: column;
-        gap: 8px;
-        min-width: 200px;
-    }
-    .ai-mode-menu.active {
-        display: flex;
-    }
-    .ai-mode-button {
-        padding: 12px 16px;
-        border-radius: 8px;
-        border: 2px solid #e2e8f0;
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 400px;
+        height: 600px;
         background: white;
-        color: #1e293b;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.2s;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        flex-direction: column;
+        z-index: 999;
+    }
+    .ai-chat-panel.active {
         display: flex;
+    }
+    
+    .ai-chat-header {
+        padding: 20px;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+        border-radius: 16px 16px 0 0;
+        display: flex;
+        justify-content: space-between;
         align-items: center;
+    }
+    .ai-chat-mode-toggle {
+        display: flex;
+        gap: 8px;
+        background: rgba(255,255,255,0.2);
+        padding: 4px;
+        border-radius: 8px;
+    }
+    .ai-mode-btn {
+        padding: 6px 12px;
+        border: none;
+        background: transparent;
+        color: white;
+        font-size: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .ai-mode-btn.active {
+        background: white;
+        color: #f97316;
+        font-weight: bold;
+    }
+    .ai-close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+    }
+    
+    .ai-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+    .ai-message {
+        margin-bottom: 16px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        max-width: 85%;
+    }
+    .ai-message.user {
+        background: #e3f2fd;
+        margin-left: auto;
+        text-align: right;
+    }
+    .ai-message.assistant {
+        background: white;
+        border: 1px solid #e0e0e0;
+    }
+    .ai-message.system {
+        background: #fff3cd;
+        font-size: 13px;
+        text-align: center;
+        margin: 0 auto;
+    }
+    
+    .ai-chat-input {
+        padding: 16px;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
         gap: 8px;
     }
-    .ai-mode-button:hover {
-        border-color: #f97316;
-        background: #fff7ed;
-        transform: translateX(-4px);
-    }
-    .ai-mode-button.user {
-        border-color: #667eea;
-    }
-    .ai-mode-button.user:hover {
-        border-color: #667eea;
-        background: #eef2ff;
-    }
-    .ai-mode-button.admin {
-        border-color: #f97316;
-    }
-    .mode-label {
+    .ai-chat-input input {
         flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        font-size: 14px;
     }
-    .mode-badge {
-        font-size: 12px;
-        padding: 2px 8px;
-        border-radius: 10px;
-        background: #f1f5f9;
-        color: #64748b;
+    .ai-chat-input button {
+        padding: 10px 20px;
+        background: #f97316;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .ai-chat-input button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
     }
 </style>
 
 <div class="ai-assistant-fab">
-    <div class="ai-mode-menu" id="aiModeMenu">
-        <a href="/ai-chat-user/" class="ai-mode-button user" target="_blank">
-            <span>👀</span>
-            <span class="mode-label">User Mode</span>
-            <span class="mode-badge">Read-Only</span>
-        </a>
-        <a href="/ai-chat-admin/" class="ai-mode-button admin" target="_blank">
-            <span>🔧</span>
-            <span class="mode-label">Admin Mode</span>
-            <span class="mode-badge">Full Access</span>
-        </a>
-    </div>
     <button class="ai-fab-button" id="aiFabButton" title="AI Assistant">
         🤖
     </button>
 </div>
 
-<script>
-    const fabButton = document.getElementById('aiFabButton');
-    const modeMenu = document.getElementById('aiModeMenu');
+<div class="ai-chat-panel" id="aiChatPanel">
+    <div class="ai-chat-header">
+        <div>
+            <h6 style="margin: 0;">AI Assistant</h6>
+            <div class="ai-chat-mode-toggle">
+                <button class="ai-mode-btn active" data-mode="user">👀 Read</button>
+                <button class="ai-mode-btn" data-mode="admin">🔧 Edit</button>
+            </div>
+        </div>
+        <button class="ai-close-btn" id="aiCloseBtn">×</button>
+    </div>
     
+    <div class="ai-chat-messages" id="aiChatMessages">
+        <div class="ai-message system">Select mode and ask about the presentation</div>
+    </div>
+    
+    <div class="ai-chat-input">
+        <input type="text" id="aiChatInput" placeholder="Ask about the presentation..." />
+        <button id="aiSendBtn">Send</button>
+    </div>
+</div>
+
+<script>
+    let currentMode = 'user';
+    let conversationHistory = [];
+    let isProcessing = false;
+    
+    // UI Elements
+    const fabButton = document.getElementById('aiFabButton');
+    const chatPanel = document.getElementById('aiChatPanel');
+    const closeBtn = document.getElementById('aiCloseBtn');
+    const chatMessages = document.getElementById('aiChatMessages');
+    const chatInput = document.getElementById('aiChatInput');
+    const sendBtn = document.getElementById('aiSendBtn');
+    const modeButtons = document.querySelectorAll('.ai-mode-btn');
+    
+    // Toggle panel
     fabButton.addEventListener('click', () => {
-        modeMenu.classList.toggle('active');
+        chatPanel.classList.toggle('active');
     });
     
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.ai-assistant-fab')) {
-            modeMenu.classList.remove('active');
+    closeBtn.addEventListener('click', () => {
+        chatPanel.classList.remove('active');
+    });
+    
+    // Mode switching
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            currentMode = mode;
+            
+            modeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Clear history and add mode message
+            conversationHistory = [];
+            chatMessages.innerHTML = '';
+            
+            const modeMsg = mode === 'user' 
+                ? '<div class="ai-message system">👀 User Mode: Read-only access</div>'
+                : '<div class="ai-message system">🔧 Admin Mode: Full edit access + auto-refresh</div>';
+            chatMessages.innerHTML = modeMsg;
+        });
+    });
+    
+    // Send message
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message || isProcessing) return;
+        
+        isProcessing = true;
+        sendBtn.disabled = true;
+        chatInput.value = '';
+        
+        // Add user message
+        addMessage(message, 'user');
+        
+        // Add to history
+        conversationHistory.push({ role: 'user', content: message });
+        if (conversationHistory.length > 6) {
+            conversationHistory = conversationHistory.slice(-6);
         }
+        
+        try {
+            const endpoint = currentMode === 'user' ? '/api/ai-chat-user/' : '/api/ai-chat-admin/';
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    history: conversationHistory
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                addMessage('Error: ' + data.error, 'system');
+            } else {
+                addMessage(data.response, 'assistant');
+                conversationHistory.push({ role: 'assistant', content: data.response });
+                
+                // Auto-refresh if admin mode and update detected
+                if (currentMode === 'admin' && (
+                    data.response.toLowerCase().includes('done') ||
+                    data.response.toLowerCase().includes('updated') ||
+                    data.response.toLowerCase().includes('changed')
+                )) {
+                    setTimeout(() => {
+                        addMessage('🔄 Auto-refreshing presentation...', 'system');
+                        setTimeout(() => location.reload(), 1000);
+                    }, 1500);
+                }
+            }
+        } catch (error) {
+            addMessage('Error: ' + error.message, 'system');
+        }
+        
+        isProcessing = false;
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
+    
+    function addMessage(text, role) {
+        const div = document.createElement('div');
+        div.className = `ai-message ${role}`;
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
     });
 </script>
 
