@@ -172,4 +172,40 @@ credentials.local.env
 # Node modules
 node_modules/
 package-lock.json
+
+# Documentation and instruction files (only README.md is tracked)
+*_SETUP.md
+*_GUIDE.md
+*_INTEGRATION.md
+*_DOCUMENTATION.md
+*_SUMMARY.md
+*_COMPLETE.md
+*_SCRIPT.md
+*_REFERENCE.md
+*_QUESTIONS.md
+*_OPTIONS.md
+*_VERIFICATION.md
+ADMIN_*.md
+AI_*.md
+API_*.md
+CLEANUP_*.md
+CLOUDFLARE_*.md
+COMPLETE_*.md
+DEPLOYMENT_*.md
+MCP_*.md
+MIGRATION_*.md
+PIPELINE_*.md
+PRESENTATION_*.md
+QUICK_*.md
+SIMPLE_*.md
+TRAFFIC_*.md
+VM_*.md
+mcp/*.md
+scripts/*.md
+!README.md
+
+# Test and temporary files
 test.txt
+test_*.sh
+*.tmp
+*.bak
