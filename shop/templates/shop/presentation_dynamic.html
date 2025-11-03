@@ -539,27 +539,23 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="ai-chat-panel" id="aiChatPanel">
     <div class="ai-chat-header">
         <div>
-            <h6 style="margin: 0;">AI Assistant</h6>
-            <div class="ai-chat-mode-toggle">
-                <button class="ai-mode-btn active" data-mode="user">👀 Read</button>
-                <button class="ai-mode-btn" data-mode="admin">🔧 Edit</button>
-            </div>
+            <h6 style="margin: 0;">🤖 AI Assistant</h6>
+            <small style="opacity: 0.9;">Edit presentation with natural language</small>
         </div>
         <button class="ai-close-btn" id="aiCloseBtn">×</button>
     </div>
     
     <div class="ai-chat-messages" id="aiChatMessages">
-        <div class="ai-message system">Select mode and ask about the presentation</div>
+        <div class="ai-message system">Ask me anything or make updates to the presentation</div>
     </div>
     
     <div class="ai-chat-input">
-        <input type="text" id="aiChatInput" placeholder="Ask about the presentation..." />
+        <input type="text" id="aiChatInput" placeholder="Ask or update..." />
         <button id="aiSendBtn">Send</button>
     </div>
 </div>
 
 <script>
-    let currentMode = 'user';
     let conversationHistory = [];
     let isProcessing = false;
     
@@ -570,7 +566,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('aiChatMessages');
     const chatInput = document.getElementById('aiChatInput');
     const sendBtn = document.getElementById('aiSendBtn');
-    const modeButtons = document.querySelectorAll('.ai-mode-btn');
     
     // Toggle panel
     fabButton.addEventListener('click', () => {
@@ -579,26 +574,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     closeBtn.addEventListener('click', () => {
         chatPanel.classList.remove('active');
-    });
-    
-    // Mode switching
-    modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mode = btn.dataset.mode;
-            currentMode = mode;
-            
-            modeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Clear history and add mode message
-            conversationHistory = [];
-            chatMessages.innerHTML = '';
-            
-            const modeMsg = mode === 'user' 
-                ? '<div class="ai-message system">👀 User Mode: Read-only access</div>'
-                : '<div class="ai-message system">🔧 Admin Mode: Full edit access + auto-refresh</div>';
-            chatMessages.innerHTML = modeMsg;
-        });
     });
     
     // Send message
@@ -624,14 +599,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const progressMsg = addMessage('🤖 AI is thinking...', 'system');
         
         try {
-            const endpoint = currentMode === 'user' ? '/api/ai-chat-user/' : '/api/ai-chat-admin/';
+            const endpoint = '/api/ai-chat/';
             
             // Show what AI is doing
             setTimeout(() => {
                 if (isProcessing) {
-                    progressMsg.textContent = currentMode === 'admin' 
-                        ? '🔄 AI is reading current content and preparing updates...'
-                        : '📖 AI is reading presentation content...';
+                    progressMsg.textContent = '🔄 AI is reading and preparing response...';
                 }
             }, 1500);
             
@@ -672,12 +645,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 addMessage(data.response, 'assistant');
                 conversationHistory.push({ role: 'assistant', content: data.response });
                 
-                // Auto-refresh if admin mode and update detected
-                if (currentMode === 'admin' && (
-                    data.response.toLowerCase().includes('done') ||
+                // Auto-refresh if update detected
+                if (data.response.toLowerCase().includes('done') ||
                     data.response.toLowerCase().includes('updated') ||
-                    data.response.toLowerCase().includes('changed')
-                )) {
+                    data.response.toLowerCase().includes('changed')) {
                     setTimeout(() => {
                         addMessage('🔄 Auto-refreshing presentation in 2 seconds...', 'system');
                         setTimeout(() => location.reload(), 2000);

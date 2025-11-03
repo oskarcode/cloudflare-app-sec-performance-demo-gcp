@@ -310,15 +310,16 @@ def api_presentation_section_update(request, section_type):
 
 
 # =====================================================
-# AI CHAT WITH MCP CONNECTOR - USER MODE (READ-ONLY)
+# =====================================================
+# AI CHAT WITH MCP CONNECTOR - UNIFIED ENDPOINT
 # =====================================================
 
 @csrf_exempt
-def ai_chat_user(request):
+def ai_chat(request):
     """
-    AI chat endpoint for USER mode (read-only access).
-    Uses direct MCP worker URL - no authentication required (IP-based access).
-    Can be accessed by anyone.
+    Unified AI chat endpoint with full read/write access.
+    Uses single MCP server with all 6 tools (2 read, 4 write).
+    Allows natural language editing of presentation content.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required'}, status=405)
@@ -340,160 +341,21 @@ def ai_chat_user(request):
         if not user_message:
             return JsonResponse({'error': 'Message is required'}, status=400)
         
-        # Build messages array
+        # Build messages array  (limit to last 6 messages to avoid large requests)
+        if len(conversation_history) > 6:
+            conversation_history = conversation_history[-6:]
+        
         messages = conversation_history + [
             {"role": "user", "content": user_message}
         ]
         
-        # User mode: Direct worker URL, read-only tools (2 tools)
-        mcp_server_url = 'https://appdemo.oskarcode.com/mcpr/sse'
-        access_level = "USER mode with read-only access"
-        available_tools = "Only 2 tools: get_all_sections, get_presentation_section (read-only)"
-        access_message = "You can ONLY VIEW content. You CANNOT update anything."
+        # Single MCP server with all tools
+        mcp_server_url = 'https://appdemo.oskarcode.com/mcp/sse'
         
         # System prompt
-        system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
+        system_prompt = """You are a brief, direct AI assistant for Cloudflare demo presentations.
 
-CURRENT MODE: {access_level}
-AVAILABLE TOOLS: {available_tools}
-ACCESS: {access_message}
-
-CRITICAL RULES - READ CAREFULLY:
-1. Maximum 3 sentences per response
-2. NO bullet points unless absolutely necessary
-3. NO markdown formatting (no **, ##, ###)
-4. Use plain text only
-5. Get to the point in first sentence
-6. If user asks to update/change/edit content, respond: "I'm in User mode (read-only). I can only view content, not update it. To make changes, you need Admin mode access."
-
-When showing info: "[Company] has [problem]. Main issue: [brief]. Solution: [brief]."
-
-GOOD (3 sentences max):
-"ToTheMoon.com is a space collectibles site with $5K/month bandwidth costs and no security. They need Cloudflare to cut costs and add WAF protection. Want to see the architecture or solutions?"
-
-BAD (too long):
-"You're working with ToTheMoon.com, an e-commerce site selling space and astronomy collectibles globally..."
-
-Your job: Answer in 3 sentences or less. Use get_presentation_section to view content. Period."""
-        
-        # Call Claude API with MCP Connector
-        response = requests.post(
-            'https://api.anthropic.com/v1/messages',
-            headers={
-                'Content-Type': 'application/json',
-                'X-API-Key': api_key,
-                'anthropic-version': '2023-06-01',
-                'anthropic-beta': 'mcp-client-2025-04-04'
-            },
-            json={
-                'model': 'claude-sonnet-4-5',
-                'max_tokens': 4096,
-                'system': system_prompt,
-                'messages': messages,
-                'mcp_servers': [
-                    {
-                        'type': 'url',
-                        'url': mcp_server_url,
-                        'name': 'presentation-readonly'
-                    }
-                ]
-            },
-            timeout=60
-        )
-        
-        # Check response status and parse
-        result = response.json()
-        
-        # Check for API errors
-        if result.get('type') == 'error':
-            error_msg = result.get('error', {}).get('message', 'Unknown error')
-            error_type = result.get('error', {}).get('type', 'unknown')
-            return JsonResponse({
-                'error': f'Anthropic API Error ({error_type}): {error_msg}'
-            }, status=500)
-        
-        # Extract assistant response
-        assistant_message = ''
-        tool_used = False
-        
-        for content_block in result.get('content', []):
-            if content_block.get('type') == 'text':
-                assistant_message += content_block.get('text', '')
-            elif content_block.get('type') == 'tool_use':
-                tool_used = True
-        
-        return JsonResponse({
-            'success': True,
-            'response': assistant_message,
-            'tool_used': tool_used,
-            'mode': 'user'
-        })
-    
-    except json.JSONDecodeError:
-        return JsonResponse(
-            {'error': 'Invalid JSON in request body'},
-            status=400
-        )
-    except requests.RequestException as e:
-        return JsonResponse(
-            {'error': f'Network error: {str(e)}'},
-            status=500
-        )
-    except Exception as e:
-        return JsonResponse(
-            {'error': f'Server error: {str(e)}'},
-            status=500
-        )
-
-
-# =====================================================
-# AI CHAT WITH MCP CONNECTOR - ADMIN MODE (READ/WRITE)
-# =====================================================
-
-@csrf_exempt
-def ai_chat_admin(request):
-    """
-    AI chat endpoint for ADMIN mode (full read/write access).
-    Uses direct MCP worker URL - no OAuth required (IP-based access).
-    PROTECT THIS ENDPOINT with Cloudflare Access policy!
-    """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST method required'}, status=405)
-    
-    try:
-        # Get API key from environment
-        import os
-        api_key = os.getenv('CLAUDE_API_KEY')
-        if not api_key:
-            return JsonResponse({
-                'error': 'CLAUDE_API_KEY not configured'
-            }, status=500)
-        
-        # Parse request body
-        data = json.loads(request.body)
-        user_message = data.get('message', '')
-        conversation_history = data.get('history', [])
-        
-        if not user_message:
-            return JsonResponse({'error': 'Message is required'}, status=400)
-        
-        # Build messages array
-        messages = conversation_history + [
-            {"role": "user", "content": user_message}
-        ]
-        
-        # Admin mode: Direct worker URL, full access (6 tools)
-        mcp_server_url = 'https://appdemo.oskarcode.com/mcpw/sse'
-        access_level = "ADMIN mode with full access"
-        available_tools = "All 6 tools: get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)"
-        access_message = "You can view AND update all presentation content."
-        
-        # System prompt
-        system_prompt = f"""You are a brief, direct AI assistant for Cloudflare demo presentations.
-
-CURRENT MODE: {access_level}
-AVAILABLE TOOLS: {available_tools}
-ACCESS: {access_message}
+AVAILABLE TOOLS: 6 tools total - get_all_sections, get_presentation_section (read), update_case_background, update_architecture, update_how_cloudflare_help, update_business_value (write)
 
 CRITICAL RULES - READ CAREFULLY:
 1. Maximum 3 sentences per response
@@ -541,7 +403,7 @@ Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structu
                     {
                         'type': 'url',
                         'url': mcp_server_url,
-                        'name': 'presentation-admin'
+                        'name': 'presentation'
                     }
                 ]
             },
@@ -572,8 +434,7 @@ Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structu
         return JsonResponse({
             'success': True,
             'response': assistant_message,
-            'tool_used': tool_used,
-            'mode': 'admin'
+            'tool_used': tool_used
         })
     
     except json.JSONDecodeError:
@@ -591,23 +452,3 @@ Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structu
             {'error': f'Server error: {str(e)}'},
             status=500
         )
-
-
-# =====================================================
-# AI CHAT PAGES - USER AND ADMIN
-# =====================================================
-
-def ai_chat_user_page(request):
-    """
-    Render the User AI Chat page (read-only mode).
-    Public access - no authentication required.
-    """
-    return render(request, 'shop/ai_chat_user.html')
-
-
-def ai_chat_admin_page(request):
-    """
-    Render the Admin AI Chat page (full read/write access).
-    PROTECT THIS PAGE with Cloudflare Access policy!
-    """
-    return render(request, 'shop/ai_chat_admin.html')
