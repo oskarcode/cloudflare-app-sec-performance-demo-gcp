@@ -407,7 +407,7 @@ Your job: Answer in 3 sentences or less. ALWAYS preserve existing schema structu
                     }
                 ]
             },
-            timeout=60
+            timeout=120  # Increased for complex multi-section updates
         )
         
         # Check response status and parse
