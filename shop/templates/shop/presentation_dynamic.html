@@ -170,37 +170,37 @@
             <div class="section-padding">
                 <h2 class="text-center mb-5"><i class="fas fa-sitemap"></i> Architecture</h2>
                 
-                {% if architecture.problems_mapping %}
+                {% if architecture.problem_mapping %}
                 <div class="row mb-5">
                     <div class="col-12">
-                        <h3><i class="fas fa-exclamation-triangle"></i> Current Problems & Solutions</h3>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Problem</th>
-                                        <th>Technical Cause</th>
-                                        <th>Cloudflare Solution</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for mapping in architecture.problems_mapping %}
-                                    <tr>
-                                        <td><strong>{{ mapping.problem }}</strong></td>
-                                        <td>{{ mapping.current_solution }}
-                                            {% if mapping.limitations %}
-                                            <ul class="mt-2">
-                                                {% for limitation in mapping.limitations %}
-                                                <li>{{ limitation }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                            {% endif %}
-                                        </td>
-                                        <td><span class="badge bg-success">{{ mapping.cloudflare_solution }}</span></td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <h3><i class="fas fa-exclamation-triangle"></i> API Security Problems</h3>
+                        <div class="row">
+                            {% for problem in architecture.problem_mapping %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-{{ problem.severity|default:'warning' }}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-{{ problem.icon }}"></i> 
+                                            {{ problem.problem }}
+                                        </h5>
+                                        <p class="card-text">{{ problem.description }}</p>
+                                        {% if problem.test_link %}
+                                        <a href="{{ problem.test_link }}" class="btn btn-sm btn-outline-danger" target="_blank">
+                                            <i class="fas fa-flask"></i> Test This Issue
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        <small class="text-muted">
+                                            <strong>Severity:</strong> 
+                                            <span class="badge bg-{{ problem.severity|default:'warning' }}">
+                                                {{ problem.severity|upper }}
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -208,31 +208,41 @@
 
                 {% if architecture.traffic_flow %}
                 <div class="row">
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 mb-4">
                         <div class="card h-100">
-                            <div class="card-header bg-warning text-dark">
-                                <h5><i class="fas fa-arrow-right"></i> Before Cloudflare</h5>
+                            <div class="card-header bg-primary text-white">
+                                <h5><i class="fas fa-users"></i> User Types</h5>
                             </div>
                             <div class="card-body">
-                                <ol class="list-group list-group-numbered">
-                                    {% for step in architecture.traffic_flow.before %}
-                                    <li class="list-group-item">{{ step }}</li>
+                                {% if architecture.traffic_flow.user_types %}
+                                <div class="list-group">
+                                    {% for user_type in architecture.traffic_flow.user_types %}
+                                    <div class="list-group-item">
+                                        <i class="fas fa-{{ user_type.icon }} text-{{ user_type.color }}"></i> 
+                                        <strong>{{ user_type.name }}</strong>
+                                    </div>
                                     {% endfor %}
-                                </ol>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 mb-4">
                         <div class="card h-100">
                             <div class="card-header bg-success text-white">
-                                <h5><i class="fas fa-check-circle"></i> After Cloudflare</h5>
+                                <h5><i class="fas fa-server"></i> Origin Infrastructure</h5>
                             </div>
                             <div class="card-body">
-                                <ol class="list-group list-group-numbered">
-                                    {% for step in architecture.traffic_flow.after %}
-                                    <li class="list-group-item">{{ step }}</li>
+                                {% if architecture.traffic_flow.origin_infrastructure %}
+                                <div class="list-group">
+                                    {% for infra in architecture.traffic_flow.origin_infrastructure %}
+                                    <div class="list-group-item">
+                                        <i class="fas fa-{{ infra.icon }} text-{{ infra.color }}"></i> 
+                                        <strong>{{ infra.name }}</strong>
+                                    </div>
                                     {% endfor %}
-                                </ol>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
